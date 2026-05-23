@@ -1,8 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
-import { Shield, Activity, Database, Lock, Search } from 'lucide-react';
+import { Shield, Activity, Database, Lock, Search, Eye } from 'lucide-react';
 import PatientDashboard from './pages/PatientDashboard';
 import PharmaDashboard from './pages/PharmaDashboard';
+import RegulatorDashboard from './pages/RegulatorDashboard';
 
 export default function App() {
   return (
@@ -33,6 +34,14 @@ export default function App() {
               >
                 <Search size={20} />
                 Trial Matching
+              </NavLink>
+
+              <NavLink 
+                to="/regulator" 
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              >
+                <Eye size={20} />
+                Regulator Oversight
               </NavLink>
               
               <div className="mt-8 mb-4">
@@ -68,6 +77,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<PatientDashboard />} />
             <Route path="/pharma" element={<PharmaDashboard />} />
+            <Route path="/regulator" element={<RegulatorDashboard />} />
           </Routes>
         </main>
       </div>

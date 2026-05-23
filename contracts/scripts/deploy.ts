@@ -1,13 +1,21 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const [deployer] = await ethers.getSigners();
+  console.log("Starting deployment of TrialVault on Fhenix network...");
 
-  const TrialVault = await ethers.getContractFactory("TrialVaultMVP");
-  const contract = await TrialVault.deploy(deployer.address);
-  await contract.waitForDeployment();
+  // Get the ContractFactory
+  const TrialVaultFactory = await ethers.getContractFactory("TrialVault");
+  
+  // Deploy the contract
+  console.log("Deploying TrialVault...");
+  const trialVault = await TrialVaultFactory.deploy();
 
-  console.log("TrialVaultMVP deployed to:", await contract.getAddress());
+  // Wait for deployment to finish
+  await trialVault.waitForDeployment();
+  const address = await trialVault.getAddress();
+
+  console.log(`✅ TrialVault deployed successfully to: ${address}`);
+  console.log("Save this address and update your frontend environment variables.");
 }
 
 main().catch((error) => {

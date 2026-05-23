@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Upload, Key, CheckCircle, Database } from 'lucide-react';
+import { Shield, Upload, Key, CheckCircle, Wallet } from 'lucide-react';
 
 export default function PatientDashboard() {
   const [isEncrypting, setIsEncrypting] = useState(false);
   const [encryptedData, setEncryptedData] = useState<any>(null);
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState('');
+
+  const connectWallet = () => {
+    setWalletConnected(true);
+    setWalletAddress('0x4F9...b1A2');
+  };
 
   const handleUpload = () => {
+    if (!walletConnected) return;
     setIsEncrypting(true);
     setTimeout(() => {
       setEncryptedData({
@@ -15,7 +23,7 @@ export default function PatientDashboard() {
         timestamp: new Date().toLocaleTimeString()
       });
       setIsEncrypting(false);
-    }, 2000);
+    }, 2500);
   };
 
   return (
@@ -24,21 +32,33 @@ export default function PatientDashboard() {
       animate={{ opacity: 1, y: 0 }}
       className="animate-fade-in"
     >
-      <header className="mb-8">
-        <h2 className="mb-2">Patient <span className="text-gradient">Data Vault</span></h2>
-        <p>Self-custody your health data with client-side FHE encryption.</p>
+      <header className="mb-8 flex justify-between items-end">
+        <div>
+          <h2 className="mb-2">Patient <span className="text-gradient">Data Vault</span></h2>
+          <p className="mb-0">Self-custody your health data with client-side FHE encryption.</p>
+        </div>
+        {!walletConnected ? (
+          <button className="btn-secondary" onClick={connectWallet}>
+            <Wallet size={18} /> Connect Wallet
+          </button>
+        ) : (
+          <div className="px-4 py-2 bg-success bg-opacity-10 text-success border border-success border-opacity-20 rounded-lg flex items-center gap-2 text-sm font-mono">
+            <div className="w-2 h-2 rounded-full bg-success"></div>
+            {walletAddress}
+          </div>
+        )}
       </header>
 
       <div className="flex gap-8">
         <div className="flex-1">
-          <div className="glass-card mb-8">
+          <div className={`glass-card mb-8 transition-opacity duration-300 ${!walletConnected ? 'opacity-50 pointer-events-none' : ''}`}>
             <div className="flex items-center gap-4 mb-6">
               <div className="p-3 bg-accent-primary rounded-full bg-opacity-20">
                 <Upload className="text-accent-primary" />
               </div>
               <div>
                 <h3 className="mb-0">Upload Medical Records</h3>
-                <p className="text-sm mb-0">Your data will be encrypted locally before upload.</p>
+                <p className="text-sm mb-0">Powered by <code>fhenix.js</code> client-side encryption.</p>
               </div>
             </div>
 
@@ -58,13 +78,29 @@ export default function PatientDashboard() {
               </div>
             </div>
 
+            {isEncrypting && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mt-4 p-4 bg-bg-tertiary rounded-lg border border-border-color mb-4"
+              >
+                <div className="text-xs text-text-secondary mb-2">Executing Local Encryption:</div>
+                <pre className="text-[10px] text-accent-primary font-mono bg-bg-secondary p-2 rounded">
+                  {`const client = new FhenixClient({ provider });
+const encAge = await client.encrypt_uint32(34);
+const encLab = await client.encrypt_uint32(142);
+// Generating Zero-Knowledge Proofs for ciphertext...`}
+                </pre>
+              </motion.div>
+            )}
+
             <button 
               className="btn-primary w-full justify-center mt-4" 
               onClick={handleUpload}
-              disabled={isEncrypting || encryptedData !== null}
+              disabled={isEncrypting || encryptedData !== null || !walletConnected}
             >
               {isEncrypting ? (
-                <span>Encrypting with FHE...</span>
+                <span>Generating Ciphertext...</span>
               ) : (
                 <>
                   <Shield size={18} />

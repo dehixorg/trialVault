@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Activity, Users, Lock, ChevronRight } from 'lucide-react';
+import { Search, Activity, Lock, ChevronRight } from 'lucide-react';
+import FheVisualizer from '../components/FheVisualizer';
 
 export default function PharmaDashboard() {
   const [isMatching, setIsMatching] = useState(false);
@@ -9,12 +10,11 @@ export default function PharmaDashboard() {
   const handleMatch = () => {
     setIsMatching(true);
     setMatchResult(null);
-    
-    // Simulate FHE matching over encrypted data
-    setTimeout(() => {
-      setMatchResult(312);
-      setIsMatching(false);
-    }, 2500);
+  };
+
+  const handleVisualizerComplete = () => {
+    setMatchResult(312);
+    setIsMatching(false);
   };
 
   return (
@@ -77,13 +77,17 @@ export default function PharmaDashboard() {
             onClick={handleMatch}
             disabled={isMatching}
           >
-            {isMatching ? 'Evaluating on Ciphertext...' : 'Run Blind Match'}
+            {isMatching ? 'Encrypting & Transmitting...' : 'Run Blind Match'}
             {!isMatching && <ChevronRight size={18} />}
           </button>
         </div>
       </div>
 
-      {matchResult !== null && (
+      {isMatching && (
+        <FheVisualizer onComplete={handleVisualizerComplete} />
+      )}
+
+      {matchResult !== null && !isMatching && (
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
