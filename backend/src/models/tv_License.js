@@ -10,4 +10,4 @@ const LicenseSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model('gp_License', LicenseSchema);
+export default mongoose.model('tv_License', LicenseSchema);

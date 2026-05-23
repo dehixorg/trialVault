@@ -11,4 +11,4 @@ const TrialSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model('gp_Trial', TrialSchema);
+export default mongoose.model('tv_Trial', TrialSchema);

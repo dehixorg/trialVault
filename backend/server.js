@@ -2,9 +2,9 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import Patient from "./src/models/gp_Patient.js";
-import Trial from "./src/models/gp_Trial.js";
-import License from "./src/models/gp_License.js";
+import Patient from "./src/models/tv_Patient.js";
+import Trial from "./src/models/tv_Trial.js";
+import License from "./src/models/tv_License.js";
 
 dotenv.config();
 

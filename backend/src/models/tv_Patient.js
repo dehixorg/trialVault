@@ -10,4 +10,4 @@ const PatientSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model('gp_Patient', PatientSchema);
+export default mongoose.model('tv_Patient', PatientSchema);
