@@ -1,20 +1,23 @@
 import express from "express";
 import cors from "cors";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import Patient from "./src/models/gp_Patient.js";
+import Trial from "./src/models/gp_Trial.js";
+import License from "./src/models/gp_License.js";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5175;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const dataDir = path.join(__dirname, "data");
-const logFile = path.join(dataDir, "requests.jsonl");
-
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('MongoDB connected successfully'))
+.catch(err => console.error('MongoDB connection error:', err));
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
@@ -23,26 +26,64 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-app.post("/cohort-requests", (req, res) => {
-  const payload = req.body || {};
-  const entry = {
-    id: `req_${Date.now()}`,
-    receivedAt: new Date().toISOString(),
-    ...payload,
-  };
-
-  fs.appendFileSync(logFile, `${JSON.stringify(entry)}\n`, "utf8");
-  res.json({ ok: true, entry });
+// Patient Routes
+app.post("/api/patients", async (req, res) => {
+  try {
+    const newPatient = new Patient(req.body);
+    const savedPatient = await newPatient.save();
+    res.status(201).json(savedPatient);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-app.get("/cohort-requests", (req, res) => {
-  const limit = Number(req.query.limit || 10);
-  if (!fs.existsSync(logFile)) {
-    return res.json([]);
+app.get("/api/patients/:wallet", async (req, res) => {
+  try {
+    const patient = await Patient.findOne({ walletAddress: req.params.wallet });
+    res.json(patient);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-  const lines = fs.readFileSync(logFile, "utf8").trim().split("\n").filter(Boolean);
-  const slice = lines.slice(-limit).map((line) => JSON.parse(line));
-  return res.json(slice);
+});
+
+// Trial Routes
+app.post("/api/trials", async (req, res) => {
+  try {
+    const newTrial = new Trial(req.body);
+    const savedTrial = await newTrial.save();
+    res.status(201).json(savedTrial);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/trials", async (req, res) => {
+  try {
+    const trials = await Trial.find().sort({ createdAt: -1 });
+    res.json(trials);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// License Routes
+app.post("/api/licenses", async (req, res) => {
+  try {
+    const newLicense = new License(req.body);
+    const savedLicense = await newLicense.save();
+    res.status(201).json(savedLicense);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/licenses/:wallet", async (req, res) => {
+  try {
+    const licenses = await License.find({ patientAddress: req.params.wallet });
+    res.json(licenses);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.listen(PORT, () => {

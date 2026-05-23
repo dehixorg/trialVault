@@ -1,0 +1,751 @@
+TrialVault
+FHE-Native Clinical Trial Infrastructure
+Technical Whitepaper  v1.0  |  2026  |  Confidential
+
+"Compute on encrypted patient data. Patients earn. Results cannot be suppressed. Trust is cryptographic, not legal."
+
+1. Executive Summary
+The global clinical trial industry is a $54 billion market operating on a fundamentally flawed architecture. Eighty-five percent of trials fail to recruit patients on time. Negative results are systematically suppressed at a documented cost exceeding $50 billion annually. Patients — the source of all trial value — receive zero compensation for their health data and retain no ownership rights after enrollment. And cross-institutional collaboration, which would dramatically accelerate drug discovery, is legally blocked because no technical mechanism exists to analyze data from multiple hospitals without first exposing it.
+TrialVault is the first clinical trial infrastructure platform built entirely on Fully Homomorphic Encryption (FHE). The platform enables computation on encrypted patient data: hospitals collaborate without sharing records, pharma companies match against patient cohorts without learning who they are, and trial results are committed to an immutable on-chain record before pharma ever sees the outcomes. Selective suppression becomes cryptographically impossible.
+The platform consists of six deeply integrated modules: a Patient Data Vault (self-custody encrypted health data with ERC-721 ownership), a Trial Matching Engine (blind eligibility evaluation returning only aggregate counts), a Data Licensing Marketplace (token-gated patient earnings with atomic swaps), a Cross-Hospital FHE Analysis Layer (multi-party computation with differential privacy), a Result Integrity Layer (Merkle commitment and on-chain verification), and an Adverse Event Reporting module (threshold-triggered encrypted safety signals).
+TrialVault is not a data platform with a privacy feature added. It is privacy-native from the first line of code. FHE is not a feature — it is the architecture. The platform is blind by design: it cannot read patient data even if it wanted to.
+
+Metric
+Current state
+TrialVault
+Patient recruitment
+7-month avg delay; $600K–$8M/day cost
+Continuous encrypted blind matching
+Data privacy
+Legal compliance only — trust-based
+Cryptographic guarantee — unconditional
+Cross-hospital collab
+Blocked by HIPAA / GDPR constraints
+FHE multi-party compute — zero exposure
+Result suppression
+Routine; documented $50B annual impact
+Impossible — on-chain Merkle proof
+Patient compensation
+Zero — zero ownership — zero control
+TVAULT token royalties per licensed use
+
+
+2. The Industry Problem
+2.1 The Scale of the Crisis
+Clinical trials are the mandatory pathway from scientific discovery to patient medicine. Every drug that reaches a pharmacy shelf has passed through years of clinical trial evaluation. That evaluation process is failing — not at the margins, but structurally and at scale.
+The numbers are staggering and well-documented:
+	•	85% of clinical trials fail to meet their patient recruitment targets on time. The average delay is 7 months per trial. For a Phase III trial, a single month of delay costs the sponsor between $600,000 and $8 million in delayed drug revenue, plus the compounding costs of trial extension.
+	•	The average cost to recruit a single patient into a clinical trial is $41,000 — a figure that has risen 35% in the past decade and shows no sign of stabilizing. This cost exists because hospitals recruit in isolation, cannot share cohort data across institutions, and must resort to expensive outreach and site expansion.
+	•	Approximately 50% of trial sites fail to recruit their target patient count. Under-enrolled trials produce statistically underpowered results — findings that cannot be confidently generalized to the patient population and may require repeat trials.
+	•	The global clinical trial management market was valued at $54.2 billion in 2024, growing at 5.8% CAGR toward $85 billion by 2032. The majority of this value creation is consumed by recruitment delays, compliance overhead, and data management complexity — all of which TrialVault's FHE architecture directly addresses.
+
+2.2 The Result Suppression Problem
+Perhaps the most damaging and least discussed failure of the clinical trial system is the systematic, documented suppression of negative results. When a pharmaceutical company funds a trial that produces unfavorable outcomes, the institutional and financial incentives strongly favor non-publication.
+A landmark analysis published in PLOS Medicine examined 12,000 clinical trial registrations and found industry-sponsored trials were 60% less likely to report negative results than independently funded studies. The estimated economic cost of this information asymmetry to global healthcare systems exceeds $50 billion annually — in drugs prescribed that were shown ineffective in hidden trials.
+This is not a problem of individual bad actors. It is a structural problem: there is no mechanism to prove that a trial's published results match the original dataset. ClinicalTrials.gov requires registration and result posting, but cannot verify whether the posted results reflect the complete original data or a selectively filtered version. Pharmaceutical companies may legally change primary endpoints post-hoc, exclude unfavorable subgroups, and choose not to publish at all.
+The consequence is real: patients receive treatments that were privately known to be ineffective, while more effective alternatives are delayed because the failed trial's negative data was never shared with the scientific community.
+
+2.3 The Collaboration Barrier
+Multi-institutional clinical research dramatically improves trial quality and statistical power. A trial drawing from five hospitals with 1,000 total patients is systematically more robust than five separate trials of 200 patients each. Yet cross-institutional collaboration remains the exception rather than the norm — not because of unwillingness, but because of technical and legal impossibility.
+To analyze patient data across institutions, you must currently choose one of two approaches:
+	•	Centralized data controller: All institutions transfer patient records to a single trusted repository. This creates a single point of failure, requires a Data Processing Agreement in every jurisdiction, generates ongoing GDPR and HIPAA compliance obligations, and exposes all data if the controller is breached.
+	•	Federated learning: Train machine learning models locally at each institution; share only model gradient updates. This approach is vulnerable to gradient inversion attacks — a well-documented technique demonstrated by Zhu et al. (2019) and further refined by multiple groups since, by which an adversary can reconstruct individual patient records from shared gradient updates. This means federated learning is probabilistically private, not cryptographically private.
+FHE is the only approach that provides mathematically unconditional privacy during computation. When data is encrypted under an FHE scheme, even the party running the computation cannot learn anything about the plaintext — this is proven cryptographically, not assumed operationally.
+
+2.4 The Patient Data Ownership Gap
+Every data point in every clinical trial was produced by a human patient who consented to participate. Those patients are the origin of all value in the clinical trial ecosystem. A successful Phase III trial can unlock a drug worth billions in annual revenue. The patient who provided the critical data point receives nothing: no compensation, no notification of results, no ability to revoke their data from future derivative analyses, and no transparency about how their health information has been used.
+This is not merely an ethical concern — it is a practical recruitment barrier with measurable impact. Surveys consistently identify privacy concerns and lack of perceived personal benefit as among the top three reasons patients decline clinical trial enrollment. A platform that structurally guarantees patient data sovereignty, cryptographically prevents unauthorized access, and pays patients token royalties for each licensed use of their data directly addresses both barriers simultaneously.
+Furthermore, the emerging EU Health Data Space regulation and equivalent frameworks in the UK, Canada, and Australia are moving toward requiring patient data portability and compensation rights. TrialVault's architecture is built for this regulatory direction — it will be compliant before these regulations become mandatory.
+
+3. Solution: TrialVault
+3.1 Core Thesis
+TrialVault replaces every trust assumption in clinical trial infrastructure with a cryptographic guarantee. Where the existing system asks 'will pharma publish all results?' — TrialVault makes selective publication structurally impossible. Where existing systems ask 'will hospitals store patient data securely?' — TrialVault ensures the platform never receives plaintext data at all. Where patients are asked to 'trust' that their data will be used appropriately — TrialVault makes inappropriate use technically impossible regardless of intent.
+The platform rests on three technical primitives that together constitute a novel architectural approach to clinical trial infrastructure:
+	•	Fully Homomorphic Encryption via Fhenix CoFHE: enables arbitrary computation on ciphertext without decryption. Health data can be analyzed, compared, and aggregated while remaining encrypted. The platform operator is cryptographically blinded.
+	•	Smart contract enforcement on Fhenix EVM: replaces institutional trust with code-enforced rules. Payment atomically triggers key fragment release. Result commitments are immutable. Consent is on-chain and revocable. No single party controls outcome.
+	•	Patient-controlled key management: the FHE private key never leaves the patient's device. Key fragments are released only through signed consent transactions. Not TrialVault, not the hospital, not pharma — no party can access patient data without the patient's explicit cryptographic authorization.
+
+3.2 The Fundamental Insight
+The insight behind TrialVault is simple and powerful: if you can compute on ciphertext, you never need to see the plaintext. All the technical and legal complexity of clinical trial data privacy exists because computation has historically required decryption. FHE breaks this assumption. Once broken, the entire architecture of clinical trial infrastructure can be redesigned from first principles.
+When you can run FHE.and(FHE.gte(patientAge, minAge), FHE.lte(patientAge, maxAge)) on ciphertext and receive an encrypted boolean — you have solved trial matching without ever knowing the patient's age. This is not a privacy feature added on top of existing infrastructure. It is a different kind of infrastructure entirely.
+
+4. Fully Homomorphic Encryption: Technical Foundation
+4.1 What FHE Is
+Fully Homomorphic Encryption is a family of cryptographic schemes that allow arbitrary computation to be performed directly on encrypted data (ciphertext), producing an encrypted result that, when decrypted with the correct key, equals the result of performing the same computation on the original plaintext. The word 'fully' distinguishes FHE from 'somewhat' or 'leveled' homomorphic schemes that can only perform a limited number of operations before the ciphertext becomes too noisy to decrypt correctly.
+The mathematical foundation of modern FHE is the Learning With Errors (LWE) problem, introduced by Regev (2005) and later extended by Brakerski, Gentry, Vaikuntanathan and others into practical schemes. The TFHE scheme used by Fhenix (Chillotti et al., 2016) is particularly suited to boolean circuits — making it efficient for comparison operations like the eligibility checks central to trial matching.
+
+4.2 FHE Data Types in TrialVault
+Type
+Plaintext range
+TrialVault use case
+Primary operations
+Est. gas / op
+euint8
+0–255
+ICD-10 diagnosis codes, severity flags, condition categories, trial phase identifiers
+eq, and, or
+~200K gas
+euint32
+0–4.29B
+Patient age (years), lab values (scaled integers), dosage amounts, LOINC codes
+gte, lte, add
+~400K gas
+euint64
+0–18.4Q
+Unix timestamps, genomic marker hashes, long SNOMED codes
+add, mul
+~700K gas
+euint128
+0–340 undecillion
+TVAULT token amounts, licensing fees (wei), cumulative royalty balances
+add, sub, mul
+~1.2M gas
+ebool
+true / false
+Eligibility match result, consent status, adverse event threshold flag, license validity
+and, or, not, select
+~150K gas
+
+4.3 FHE Operations Used Across TrialVault Contracts
+Operation
+fhEVM function
+Use in TrialVault
+Module
+Comparison ≤
+FHE.lte(a,b)
+Age range check: patient age ≤ maximum enrollment age
+TrialMatcher.sol
+Comparison ≥
+FHE.gte(a,b)
+Lab threshold: FHE.gte(labValue, encryptedMinThreshold)
+TrialMatcher.sol
+Equality
+FHE.eq(a,b)
+Diagnosis match: FHE.eq(patientCode, requiredICD10)
+TrialMatcher.sol
+Logical AND
+FHE.and(a,b)
+Multi-criteria: FHE.and(FHE.and(ageMatch, diagMatch), labMatch)
+TrialMatcher.sol
+Logical NOT
+FHE.not(a)
+Exclusion criteria: FHE.not(excludedConditionPresent)
+TrialMatcher.sol
+Conditional select
+FHE.select(cond,a,b)
+Add 1 to count if match: FHE.select(fullMatch, euint32(1), euint32(0))
+TrialMatcher.sol
+Integer addition
+FHE.add(a,b)
+Aggregate sums: pool count, total severity score, revenue accrual
+All modules
+Multiplication
+FHE.mul(a,b)
+Weighted scoring: FHE.mul(severity, weightFactor)
+EventReporter.sol
+Decryption
+TFHE.decrypt()
+Gated reveal of aggregate outputs only — never individual records
+All modules
+
+4.4 Why FHE Outperforms All Alternatives
+Approach
+Privacy guarantee
+Arbitrary queries
+Cross-party compute
+TrialVault verdict
+FHE — TrialVault
+Mathematical — unconditional
+Yes — full flexibility
+Yes — multi-party
+Selected
+ZK proofs
+Cryptographic
+No — circuit-specific only
+Limited
+Insufficient
+Federated learning
+Probabilistic — breakable*
+No — model-fixed
+Yes
+Rejected
+Trusted execution (TEE)
+Hardware-dependent†
+Yes
+Yes
+Insufficient
+Central secure DB
+Trust-based — zero guarantee
+Yes
+Yes
+Rejected
+*Zhu et al. (2019) demonstrated gradient inversion attacks reconstructing individual patient records from federated gradients with high fidelity.
+†Intel SGX has been the subject of 12+ disclosed exploits including Spectre, Foreshadow, and PlunderVolt.
+
+5. Core Protocol Modules
+TrialVault consists of six smart contract modules, each addressing a distinct and documented failure mode in the existing clinical trial ecosystem. All modules are deployed as Solidity contracts on the Fhenix network and interact through a central TrialVaultRegistry.sol contract that maintains cross-module state and access control.
+5.1 Module 1: Patient Data Vault
+5.1.1 Problem Addressed
+Patients have no mechanism to store health data in a sovereign, portable, privacy-preserving format. Every existing system — hospital EHR, health app, research database — is a silo controlled by the institution, not the patient.
+5.1.2 Technical Architecture
+The Patient Data Vault is an ERC-721 NFT contract with embedded FHE ciphertext storage. Each patient's health data is encrypted client-side using the fhevmjs SDK before any network transmission. The encrypted data blob is stored on IPFS; the IPFS CID and encrypted metadata fields are committed on-chain.
+5.1.3 Detailed Workflow
+	•	Patient connects wallet. fhevmjs SDK generates a session FHE keypair. Private key stored encrypted in localStorage, protected by a key derived from the patient's wallet signing key via HKDF.
+	•	Health records uploaded in browser. Parser extracts structured fields: age (integer), ICD-10 diagnosis codes (8-bit integers), LOINC lab values (scaled 32-bit integers), medication codes.
+	•	Client-side encryption: encAge = await instance.encrypt32(age); encDiagnosis = await instance.encrypt8(icd10AsInt); encLab1 = await instance.encrypt32(labValue * 100) — all in browser WASM.
+	•	Encrypted blob uploaded to IPFS. CID returned. Patient signs a transaction calling PatientVault.registerData(cid, encAge, encDiagnosis, encLab1, encLab2).
+	•	Contract mints ERC-721 Data NFT to patient's wallet. Token URI points to IPFS CID. Patient configures licensing preferences: minimum price (TVAULT), allowed categories bitmap, geographic whitelist.
+5.1.4 Smart Contract Interface
+interface IPatientVault {
+  // Register encrypted health data and mint Data NFT
+  function registerData(
+    string calldata ipfsCid,
+    euint8  encryptedDiagnosisCode,
+    euint32 encryptedAge,
+    euint32 encryptedLabValue1,
+    euint32 encryptedLabValue2
+  ) external returns (uint256 tokenId);
+
+  // Update licensing terms — patient-only
+  function updateLicensingTerms(
+    uint256 tokenId,
+    uint128 minPriceWei,        // in TVAULT (18 decimals)
+    uint8   allowedCategories,  // bitmask: bit0=age, bit1=diagnosis, ...
+    bytes2  geoWhitelist        // ISO 3166-1 alpha-2 country bitmask
+  ) external;
+
+  // Revoke data access from a specific licensee
+  function revokeAccess(uint256 tokenId, address licensee) external;
+
+  event DataRegistered(address indexed patient, uint256 tokenId, string ipfsCid);
+  event AccessRevoked(uint256 indexed tokenId, address indexed licensee);
+}
+
+5.2 Module 2: Trial Matching Engine
+5.2.1 Problem Addressed
+Patient recruitment costs $41,000 per patient because hospitals recruit in isolation. No mechanism exists to match pharma eligibility criteria against a multi-hospital patient pool without exposing patient records or criteria to the other party.
+5.2.2 Technical Architecture
+The Trial Matching Engine evaluates encrypted eligibility criteria against encrypted patient records using FHE operations. Neither pharma's criteria nor patient health data is ever in plaintext on-chain. The output for each patient is an encrypted ebool. The only decrypted output is an aggregate pool count.
+5.2.3 Detailed Workflow
+	•	Pharma submits TrialMatcher.createTrial() with encrypted criteria: encMinAge, encMaxAge, encDiagnosisCode, encLabMin, encLabMax — all encrypted by the pharma portal before submission.
+	•	TrialMatcher.runMatching(trialId) iterates over registered patient vaults. For each patient: ageOK = FHE.and(FHE.gte(p.encAge, criteria.minAge), FHE.lte(p.encAge, criteria.maxAge)); diagOK = FHE.eq(p.encDiagnosis, criteria.diagCode); labOK = FHE.and(FHE.gte(p.encLab, criteria.labMin), FHE.lte(p.encLab, criteria.labMax)); fullMatch = FHE.and(FHE.and(ageOK, diagOK), labOK).
+	•	Pool count: encCount = FHE.add(encCount, FHE.select(fullMatch, euint32(1), euint32(0))). After all patients: pharma calls TFHE.decrypt(encCount) → receives integer (e.g. 312). No individual records exposed.
+	•	For each fullMatch=true patient, contract emits ConsentRequest event to patient wallet. Patient reviews trial details off-chain. Consent is granted by calling grantConsent(trialId) — a separate voluntary transaction.
+5.2.4 Smart Contract Interface
+interface ITrialMatcher {
+  function createTrial(
+    string calldata name,
+    euint8  encDiagnosisRequired,
+    euint32 encMinAge, euint32 encMaxAge,
+    euint32 encLabMin, euint32 encLabMax
+  ) external returns (uint256 trialId);
+
+  function runMatching(uint256 trialId) external;
+  function getPoolCount(uint256 trialId) external returns (uint32);
+  function grantConsent(uint256 trialId) external;
+  function withdrawConsent(uint256 trialId) external;
+
+  event TrialCreated(uint256 indexed trialId, address sponsor);
+  event ConsentRequest(address indexed patient, uint256 indexed trialId);
+  event ConsentGranted(address indexed patient, uint256 indexed trialId);
+}
+
+5.3 Module 3: Data Licensing Marketplace
+5.3.1 Problem Addressed
+Patients contribute health data and earn nothing. Pharma companies pay millions in infrastructure costs to access patient pools. There is no direct economic relationship between data producers (patients) and data consumers (pharma) — all value is captured by institutional intermediaries.
+5.3.2 Technical Architecture
+The Licensing Marketplace is an escrow contract implementing atomic swaps between encrypted key fragments and TVAULT token payments. Atomicity is enforced by the smart contract: payment releases only when a valid key fragment is received, and the key fragment is released only when payment is confirmed. No trust between patient and pharma is required.
+5.3.3 Detailed Workflow
+	•	Patient lists dataset: LicenseMarket.listDataset(tokenId, minPriceWei, categoryBitmap). Listing emits DatasetListed event indexed by The Graph.
+	•	Pharma requests license: LicenseMarket.requestLicense(datasetId, purpose), attaching required TVAULT payment. Tokens held in contract escrow. LicenseRequested emitted to patient.
+	•	Patient reviews purpose. If approved, signs transaction calling releaseKeyFragment(licenseId, encryptedKeyFragment). Key fragment is re-encrypted specifically for pharma's FHE public key.
+	•	Contract atomically: releases escrowed TVAULT to patient wallet; stores key fragment accessible only to pharma's wallet; records license on-chain with Merkle commitment.
+	•	Pharma downloads encrypted blob from IPFS, uses key fragment to decrypt the licensed fields only. Unlicensed fields remain encrypted and inaccessible.
+	•	Ongoing royalties: if pharma uses data in derivative analyses, ResearchDerivative.sol tracks usage and enforces royalty distributions configured at license creation.
+5.3.4 Smart Contract Interface
+interface ILicenseMarket {
+  function listDataset(uint256 tokenId, uint128 priceWei, uint8 categoryBitmap) external;
+  function requestLicense(uint256 datasetId, string calldata purpose)
+    external payable returns (uint256 licenseId);
+  function releaseKeyFragment(uint256 licenseId, bytes calldata encKeyFragment) external;
+  function claimRoyalty(uint256 licenseId) external;
+  function revokeActiveLicense(uint256 licenseId) external;
+
+  event LicenseGranted(uint256 indexed id, address patient, address pharma, uint128 amount);
+  event RoyaltyClaimed(uint256 indexed licenseId, address patient, uint128 amount);
+}
+
+5.4 Module 4: Cross-Hospital Encrypted Analysis
+5.4.1 Problem Addressed
+Multi-hospital clinical trials require data aggregation across independent institutions. Existing approaches require either centralizing patient records (single point of failure) or federated learning (gradient inversion vulnerabilities). Neither provides a cryptographic privacy guarantee.
+5.4.2 Technical Architecture
+MultiHospitalTrial.sol implements FHE-based multi-party computation. Each hospital encrypts its patient cohort under a shared trial public key generated via a distributed key generation (DKG) ceremony. No single party holds the complete private key. Analysis functions (mean, variance, correlation) are evaluated on the combined ciphertext. Differential privacy noise is applied before decryption. Decryption requires a threshold signature (e.g. 2-of-3 hospital signatures).
+5.4.3 Detailed Workflow
+	•	Trial coordinator deploys MultiHospitalTrial.sol specifying: participant hospital addresses, analysis type (MEAN/VARIANCE/CORRELATION/SURVIVAL), epsilon (differential privacy parameter ε ∈ {0.5, 1, 2}), and expected total cohort size.
+	•	DKG ceremony: participating hospitals run a threshold key generation protocol off-chain (using TFHE-rs distributed key generation). The resulting shared public key is registered on-chain. No private key fragments are on-chain.
+	•	Each hospital signs a multi-sig participation agreement stored as a hash on-chain. All hospitals must sign before data submission opens.
+	•	Hospitals upload encrypted patient data in batches of 50 (gas management). Each record: tuple (encAge: euint32, encDiagnosis: euint8, encLab1: euint32, encLab2: euint32).
+	•	runAnalysis() aggregates using FHE.add() across all uploaded records. For mean: encSum = sum of all encField values; encMean = FHE.div(encSum, euint32(totalPatients)). Differential privacy: encResult = FHE.add(encMean, sampleLaplaceNoise(epsilon)).
+	•	Decryption: requestDecryption() requires ≥ threshold hospital signatures. Decrypted output: aggregate statistics only (mean, std dev, quartiles). No path to reconstruct individual records from aggregate output.
+5.4.4 Smart Contract Interface
+interface IMultiHospitalTrial {
+  function deployTrial(
+    address[] calldata hospitals,
+    uint8 analysisType,           // 0=MEAN,1=VARIANCE,2=CORRELATION
+    uint8 dpEpsilon,              // Differential privacy epsilon * 10
+    bytes calldata sharedPubKey   // DKG output
+  ) external returns (uint256 trialId);
+
+  function signParticipation(uint256 trialId) external;
+  function submitEncryptedCohort(uint256 trialId, euint32[] calldata encAges,
+    euint8[] calldata encDiagnoses, euint32[] calldata encLabs) external;
+  function runAnalysis(uint256 trialId) external;
+  function requestDecryption(uint256 trialId, bytes calldata sig) external;
+
+  event AnalysisComplete(uint256 indexed trialId, uint256 totalPatients);
+  event DecryptionThresholdReached(uint256 indexed trialId);
+}
+
+5.5 Module 5: Result Integrity Layer
+5.5.1 Problem Addressed
+Pharma companies routinely suppress negative trial results. There is no current mechanism to prove that published results match the original dataset. ClinicalTrials.gov requires result posting but cannot cryptographically verify integrity. Post-hoc endpoint modification, selective population exclusion, and outright non-publication are documented practices with no technical remedy.
+5.5.2 Technical Architecture
+ResultIntegrity.sol implements a Merkle commitment scheme. Before any patient is enrolled, the trial protocol (statistical analysis plan, primary/secondary endpoints, inclusion/exclusion criteria) is hashed and committed on-chain. Before any analysis is run, the complete enrolled dataset is committed as a Merkle root. Published results include a Merkle proof linking the published findings to the committed root. Any third party can verify integrity on-chain in a single function call.
+5.5.3 Detailed Workflow
+	•	Pre-enrollment: pharma calls commitProtocol(trialId, SHA256(SAP + endpoints + criteria)). This hash is immutable from this point.
+	•	Enrollment complete: pharma calls commitDataset(trialId, merkleRoot) where merkleRoot = Merkle root of all enrolled patient records and all collected data points. This is committed before any statistical analysis is run.
+	•	At each analysis checkpoint: commitCheckpoint(trialId, checkpointIndex, SHA256(checkpointData)). Block timestamp is stored immutably.
+	•	Publication: publishResults(trialId, SHA256(results), merkleProofs[]). Contract verifies MerkleProof.verify(merkleProofs, merkleRoot, SHA256(results)). Fails if results don't match committed data.
+	•	Verification: any regulator, journal, or third party calls verifyIntegrity(trialId, resultsHash) → returns bool. A false return is publicly visible on-chain and constitutes provable evidence of data manipulation.
+5.5.4 Smart Contract Interface
+interface IResultIntegrity {
+  function commitProtocol(uint256 trialId, bytes32 protocolHash) external;
+  function commitDataset(uint256 trialId, bytes32 merkleRoot) external;
+  function commitCheckpoint(uint256 trialId, uint8 idx, bytes32 chkHash) external;
+  function publishResults(uint256 trialId, bytes32 resultsHash,
+    bytes32[] calldata proof) external;
+  function verifyIntegrity(uint256 trialId, bytes32 resultsHash)
+    external view returns (bool);
+
+  event ProtocolCommitted(uint256 indexed trialId, bytes32 hash, uint256 timestamp);
+  event ResultsPublished(uint256 indexed trialId, bytes32 resultsHash, bool verified);
+}
+
+5.6 Module 6: Adverse Event Reporting
+5.6.1 Problem Addressed
+Trial sponsors have historically suppressed or delayed adverse event reporting. In the Vioxx scandal, Merck was found to have withheld adverse cardiovascular event data for years. Current systems rely on sponsor self-reporting to regulatory databases. There is no mechanism for patients to anonymously report side effects that cannot be suppressed by the trial sponsor.
+5.6.2 Technical Architecture
+EventReporter.sol maintains an encrypted running aggregate of adverse event reports. Patients submit via burner addresses funded through a privacy-preserving relayer — decoupling the report from the patient's primary wallet. The aggregate severity score is compared to an encrypted threshold using FHE.gte(). When the threshold is breached, an uncensorable on-chain alert fires automatically. No party can prevent the alert because it is triggered by smart contract logic, not by human decision.
+5.6.3 Detailed Workflow
+	•	Patient experiences side effect. Patient portal generates a fresh burner address, funds it via a mixer contract (or a privacy-preserving relayer). Patient submits from burner: EventReporter.submitEvent(trialId, encEventCode, encSeverity).
+	•	Contract updates: totalEvents = FHE.add(totalEvents, euint32(1)); totalSeverity = FHE.add(totalSeverity, encSeverity). Running aggregates maintained fully encrypted.
+	•	At each batch (every 100 submissions or 24 hours): thresholdBreached = FHE.gte(totalSeverity, encryptedThreshold). If true: contract emits SafetyAlert(trialId, blockNumber) — public, immutable, uncensorable.
+	•	Regulatory query: threshold-signed decryption releases aggregate event counts (not individual records) to authorized regulators.
+
+6. System Architecture
+6.1 Three-Layer Architecture Overview
+Layer
+Components
+Privacy role
+Layer 1: Client
+Next.js Patient Portal, Next.js Pharma Portal, fhevmjs SDK, wagmi, viem, MetaMask / WalletConnect
+All encryption happens here. Plaintext never leaves the browser. fhevmjs performs all FHE key operations in WASM.
+Layer 2: FHE Blockchain
+Fhenix network, fhEVM precompiles, PatientVault.sol, TrialMatcher.sol, LicenseMarket.sol, MultiHospitalTrial.sol, ResultIntegrity.sol, EventReporter.sol, TrialVaultRegistry.sol
+All business logic executes on ciphertext. Smart contracts are provably blind — FHE operations guarantee no plaintext leakage even from the compute layer.
+Layer 3: Storage & Indexing
+IPFS / Filecoin (encrypted blobs), The Graph (event indexing), Chainlink (price + regulatory oracles), Ceramic Network (patient DID documents)
+Only encrypted content stored off-chain. IPFS CIDs are public; contents are ciphertext. The Graph indexes only event metadata, never health data.
+
+6.2 Full Data Flow: Patient Registration to Published Results
+#
+Actor
+Action
+FHE / chain operation
+Output / state change
+1
+Patient (browser)
+Encrypts health records client-side
+FHE.encrypt(age,diagnosis,labValues)
+Ciphertext tuple
+2
+Patient
+Uploads to IPFS, commits CID on-chain
+PatientVault.registerData() → mint NFT
+ERC-721 Data NFT issued
+3
+Pharma (portal)
+Encrypts eligibility criteria client-side
+FHE.encrypt(minAge,maxAge,icd10,labRange)
+Encrypted criteria tuple
+4
+Pharma
+Creates trial on-chain
+TrialMatcher.createTrial() → trialId
+Trial record stored
+5
+TrialMatcher.sol
+Evaluates criteria vs each patient
+FHE.and(FHE.gte,FHE.lte) per patient → ebool
+Encrypted match flags
+6
+TrialMatcher.sol
+Aggregates match results
+FHE.add(FHE.select(match,1,0))
+Encrypted pool count
+7
+Pharma
+Decrypts pool count only
+TFHE.decrypt(encCount)
+Integer (e.g. 312 patients)
+8
+Patient
+Reviews trial, grants consent on-chain
+TrialMatcher.grantConsent(trialId)
+Consent record committed
+9
+LicenseMarket.sol
+Atomic swap: key ↔ tokens
+escrow(TVAULT) + releaseKeyFragment()
+TVAULT to patient; key to pharma
+10
+Pharma
+Commits dataset Merkle root pre-analysis
+ResultIntegrity.commitDataset()
+Merkle root immutable on-chain
+11
+Pharma
+Publishes results with Merkle proof
+ResultIntegrity.publishResults(hash,proof)
+Proof verified on-chain; bool returned
+
+6.3 Security Architecture
+Attack Vector Analysis
+Attack vector
+Description
+Mitigation
+Residual risk
+Insider at TrialVault
+Platform operator attempts to read patient data
+Cryptographic impossibility — plaintext never leaves patient browser; FHE ensures platform is blind by design
+None
+Ciphertext interception
+Attacker captures encrypted data in transit
+FHE ciphertext reveals nothing without private key. Transport also TLS-encrypted.
+Negligible
+Smart contract exploit
+Reentrancy or logic bug in escrow contracts
+ReentrancyGuard on all value-holding contracts; formal verification of core logic; 3rd-party audit pre-mainnet
+Low with audit
+Patient key loss
+Patient loses FHE private key — data inaccessible
+Social recovery via Shamir's Secret Sharing (3-of-5 guardian scheme); optional hardware wallet custody
+Medium (UX challenge)
+FHE parameter weakness
+Adversary breaks the underlying LWE assumption
+Fhenix uses NIST-recommended 128-bit security parameters. Cryptographic community consensus: LWE is quantum-resistant.
+Very low (quantum-era)
+Oracle manipulation
+Chainlink oracle feeds manipulated pricing or regulatory data
+Multi-oracle aggregation; circuit breakers on outlier values; critical operations use time-locked consensus
+Low
+
+7. Market Analysis
+7.1 Total Addressable Market
+The global clinical trial management market was valued at $54.2 billion in 2024, growing at a 5.8% CAGR to reach $84.9 billion by 2032 (Grand View Research, 2024). This market encompasses trial planning, patient recruitment and retention, data collection and management, regulatory submission, and pharmacovigilance.
+Adjacent markets that TrialVault's modules directly address or enable include:
+Market
+2024 value
+2030 projection
+CAGR
+Clinical Trial Management
+$54.2B
+$74.8B
+5.8%
+Real-World Evidence (RWE)
+$2.4B
+$5.1B
+12.4%
+Clinical Data Management (CDM)
+$6.1B
+$11.2B
+10.2%
+Patient Engagement Technology
+$3.8B
+$8.7B
+14.8%
+Health Data Marketplace
+$0.8B
+$4.2B
+28.3%
+TOTAL ADDRESSABLE MARKET
+$67.3B
+$104B
+7.6%
+
+7.2 Serviceable Addressable Market
+The SAM for TrialVault is defined as the subset of clinical trials where cross-institutional data collaboration or privacy compliance is the primary bottleneck to execution. Based on industry surveys and ClinicalTrials.gov registration data, this represents approximately 22% of all trials by count, accounting for a disproportionate 35% of total trial spend due to the complexity of the affected indications.
+	•	Oncology trials: typically require multi-site enrollment due to patient scarcity. 68% of oncology Phase II and III trials involve 5+ sites.
+	•	Rare disease trials: by definition involve small patient populations spread across many centers. Cross-national collaboration is standard but difficult.
+	•	Neurological conditions: Alzheimer's, Parkinson's, ALS — highly sensitive diagnostic categories where patient privacy concerns directly affect enrollment.
+	•	Cross-jurisdictional trials: simultaneous US, EU, and APAC enrollment requires compliance with HIPAA, GDPR, and APPI simultaneously — a compliance burden FHE eliminates by construction.
+Estimated SAM: $12.1 billion (22% of clinical trial management + 35% of adjacent markets).
+
+7.3 Serviceable Obtainable Market
+TrialVault's Year 5 revenue target of $480 million represents 4% of SAM, based on:
+	•	15 enterprise pharma contracts averaging $8M per year (Tier 1: Pfizer, Roche, Novartis-scale): $120M
+	•	120 mid-market CRO and hospital partnerships averaging $2.2M per year: $264M
+	•	Patient licensing royalties at 5% of licensing transaction volume ($900M platform GMV at Year 5): $45M
+	•	TVAULT token staking and governance revenue: $51M
+Growth trajectory: $620K Year 1 → $9.3M Year 3 → $50M Year 5 → $480M Year 7 (full market penetration in SAM segment).
+
+7.4 Market Timing: Why Now
+Force
+Evidence
+FHE performance threshold
+10,000x performance improvement in FHE over the past decade. Fhenix CoFHE brings FHE operations to production-viable gas costs for medical workloads. This was computationally impractical as recently as 2022.
+Regulatory pressure
+EU AI Act (effective August 2024) imposes strict privacy requirements on AI systems processing health data. GDPR enforcement increased 135% in 2024. The US HIPAA Safe Harbor rule is under active review for stricter computational privacy requirements.
+Pharma cost crisis
+Average trial cost per patient hit $41,000 in 2025 — up 35% from 2019. Post-COVID pipeline pressure means pharma is spending more per trial with worse recruitment outcomes. CFOs are actively seeking structural solutions, not incremental improvements.
+Infrastructure maturity
+Fhenix mainnet, IPFS/Filecoin production-grade storage, The Graph production indexing, Chainlink enterprise oracles — all primitives are production-ready. TrialVault assembles them into a vertical solution for the first time.
+57% adoption blocker
+57% of pharmaceutical companies and health systems cite data privacy as their primary concern in adopting AI-assisted trial management (Deloitte Health, 2025). FHE is the only technical approach that eliminates this concern by architectural guarantee.
+
+8. Competitive Analysis
+8.1 Competitive Landscape
+Platform
+Patient ownership
+Cross-hosp.
+Result integrity
+FHE compute
+Token economy
+Verdict
+ClinicalTrials.gov
+None
+None
+Partial
+None
+None
+Inadequate
+Medidata (Veeva)
+None
+Central trust
+None
+None
+None
+Incumbent
+Federated learning
+None
+Probabilistic
+None
+No
+None
+Insufficient
+Health data NFTs
+Partial
+None
+None
+No
+Partial
+Adjacent
+TrialVault
+Full
+Full (FHE MPC)
+Full (on-chain)
+Native
+Full royalties
+Leader
+
+8.2 Why Existing Solutions Cannot Close the Gap
+	•	ClinicalTrials.gov is a registration database. It verifies trial registration but cannot enforce result integrity. Selective disclosure has no technical remedy under its architecture.
+	•	Medidata and Veeva are centralized data management systems built on conventional databases. They require operators to trust platform security. A compromised admin or insider threat exposes all client trial data. There is no cryptographic privacy guarantee.
+	•	Federated learning systems are vulnerable to model inversion and gradient inversion attacks. Zhu et al. (NeurIPS 2019) demonstrated reconstruction of individual training examples from gradient updates. This makes federated learning insufficient for regulatory-grade patient privacy.
+	•	Health data NFT projects (Aimedis, Genomes.io, BioNTech digital health) focus on patient data ownership but require plaintext data for analysis. Encryption is storage-layer only; computation requires decryption — eliminating the privacy guarantee at the point of use.
+TrialVault occupies a category that does not yet exist: FHE-native clinical trial infrastructure. The competitive moat is not a feature set — it is the architecture. Competitors cannot replicate the privacy guarantee without rebuilding their entire stack on FHE primitives.
+
+9. TVAULT Token Economy
+9.1 Token Overview
+TVAULT is the native utility token of the TrialVault protocol. It is an ERC-20 token deployed on the Fhenix network with bridging support to Ethereum mainnet and major L2 networks (Arbitrum, Base, Optimism). TVAULT is not a speculative instrument — it is a protocol utility token with direct demand generated by protocol usage.
+
+9.2 Token Utility
+Utility
+Mechanic
+Demand driver
+Data licensing payment
+Pharma pays TVAULT to license patient datasets
+Every licensed dataset consumes TVAULT — demand scales with trial volume
+Patient royalties
+TVAULT distributed to patients per licensing event
+Creates organic patient acquisition — patients join to earn
+Trial matching fees
+Pharma pays TVAULT per matching run
+Every trial creation generates demand
+Staking / governance
+Token holders stake to vote on protocol parameters
+Creates demand sink; long-term holders earn governance yield
+Compute fee settlement
+Cross-hospital analysis fees paid in TVAULT
+Complex multi-party analyses = premium fees
+Adverse event bonds
+Trial sponsors stake TVAULT as safety bond; slashed if SafetyAlert is suppressed
+Creates accountability layer with direct economic incentive
+
+9.3 Token Distribution
+Allocation
+Percentage
+Vesting
+Core team
+18%
+4-year vest, 1-year cliff
+Protocol treasury
+22%
+DAO-governed release
+Ecosystem & grants
+15%
+2-year linear release
+Patient acquisition & rewards
+20%
+5-year release tied to platform milestones
+Strategic partners & investors
+12%
+2-year vest, 6-month cliff
+Public sale
+8%
+12-month linear unlock post-TGE
+Liquidity provision
+5%
+Immediate — DEX liquidity pools
+
+10. Business Model & Revenue Projections
+10.1 Revenue Streams
+Revenue stream
+Model
+Target customer
+Year 1
+Year 3
+Year 5
+Trial matching SaaS
+Per-trial / subscription
+Pharma sponsors
+$240K
+$3.2M
+$18M
+Licensing platform fee
+5% of GMV
+Pharma (% of license value)
+$180K
+$2.8M
+$14M
+Cross-hospital compute
+Per-trial + per-batch
+CROs / research coordinators
+$120K
+$1.9M
+$10M
+Result integrity SaaS
+Annual per-trial subscription
+Pharma / regulators
+$80K
+$1.4M
+$8M
+TOTAL
+
+
+$620K
+$9.3M
+$50M
+
+10.2 Unit Economics
+	•	Customer Acquisition Cost (CAC): $45,000 for enterprise pharma (relationship-based outreach + pilot); $8,000 for mid-market CRO (inbound from case studies + conference presence).
+	•	Annual Contract Value (ACV): $8M enterprise, $2.2M mid-market, $85K research hospital.
+	•	Gross Margin: 78% (infrastructure costs are primarily Fhenix gas + IPFS storage, which scale sub-linearly with ACV growth).
+	•	Net Revenue Retention: projected 125% Year 3+ as trials expand from pilot to full platform and add modules.
+	•	Payback Period: 6 months at enterprise, 4 months at mid-market (high ACV relative to sales effort).
+
+11. Development Roadmap
+11.1 Wave 1: Foundation (Now – Month 2)
+	•	PatientVault.sol and TrialMatcher.sol fully deployed on Fhenix Helium testnet
+	•	Client-side fhevmjs SDK integration — all encryption in browser
+	•	Patient Portal: upload, encrypt, IPFS store, mint NFT
+	•	Pharma Portal: trial creation, encrypted criteria, pool count display
+	•	Complete Hardhat test suite with Fhenix testnet fork
+	•	GitHub repository: public, MIT licensed, full README + architecture docs
+	•	AKINDO buildathon submission with working demo video
+
+11.2 Wave 2: Full Protocol (Month 2–4)
+	•	LicenseMarket.sol — atomic key fragment ↔ TVAULT swap with escrow
+	•	ResultIntegrity.sol — Merkle commitment and on-chain verification
+	•	MultiHospitalTrial.sol — FHE multi-party computation with differential privacy
+	•	TVAULT ERC-20 token deployment on Fhenix testnet
+	•	First hospital pilot: encrypted cohort upload + matching run with real patient data
+	•	The Graph subgraph — production event indexing
+	•	Security audit engagement initiated
+
+11.3 Wave 3: Market Launch (Month 4–12)
+	•	EventReporter.sol — adverse event module with threshold alerts
+	•	Enterprise pharma dashboard with trial analytics and KPI reporting
+	•	FDA and EMA regulatory documentation package
+	•	First revenue-generating production trial deployment
+	•	TVAULT public token launch with DEX liquidity provision
+	•	Governance staking module live
+	•	APAC expansion: Japan PMDA and India CDSCO regulatory engagement
+
+11.4 Year 2–5: Scale
+	•	15 enterprise pharma contracts signed; $50M ARR
+	•	Regulatory acceptance as FDA-recognized data integrity solution
+	•	TrialVault DAO formation — protocol governance transitions to token holders
+	•	European Health Data Space integration — TrialVault as compliant infrastructure
+	•	Academic publication: peer-reviewed paper on FHE clinical trial infrastructure
+
+12. Risk Analysis
+Risk
+Category
+Description
+Mitigation
+Severity
+FHE gas costs
+Technical
+FHE operations 10–100x more expensive than standard EVM operations; large cohorts may exceed block gas limits
+Batch processing architecture; off-chain preprocessing; Fhenix network gas improvements roadmapped
+Medium
+Regulatory non-acceptance
+Regulatory
+FDA/EMA may not immediately accept FHE-computed results as audit-quality evidence
+Position as supplement to existing compliance; engage FDA digital health center early; peer-review publication strategy
+Medium
+Patient key UX
+Product
+Non-technical patients managing FHE keys creates risk of key loss and data inaccessibility
+Social recovery (Shamir 3-of-5); optional guardian wallet scheme; hardware key abstraction layer
+Medium
+Pharma resistance
+GTM
+Result integrity module may face resistance from pharma companies who benefit from current opacity
+Frame as regulatory advantage and liability protection; enter via recruitment module where incentives align; land and expand
+Medium
+Fhenix network risk
+Infrastructure
+TrialVault is dependent on Fhenix network uptime and CoFHE development roadmap
+Multi-chain roadmap with fallback to EVM-compatible FHE alternatives (Zama fhEVM on Ethereum); abstract chain layer in architecture
+Low
+Smart contract bugs
+Technical
+Vulnerabilities in escrow or FHE contract logic could expose funds or data
+Formal verification (Certora or Mythril) of core contracts; third-party audit before mainnet; $500K bug bounty program
+Low w/ audit
+
+13. Team
+TrialVault is being built by a founding team with direct domain expertise across FHE cryptography, clinical trial operations, Web3 infrastructure, and enterprise health technology sales. The team has been assembled specifically for this problem — not a Web3 team that pivoted into healthcare, but domain experts from both fields who met through the FHE research community.
+
+[Founding team details to be added. Advisors include an FHE PhD researcher, an FDA regulatory affairs specialist with 15 years at FDA Digital Health Center, a hospital CISO with clinical trial data governance experience, and a former pharma CTO with Phase III trial execution experience.]
+Advisory note: TrialVault is actively seeking advisors and investors who can provide introductions to: (1) research hospitals willing to pilot encrypted cohort matching, (2) mid-size pharma or CRO for the first paid trial partnership, and (3) FDA Digital Health Center contacts for early regulatory engagement.
+
+14. Conclusion
+Clinical trials are the mechanism by which scientific discovery becomes patient medicine. Their current architecture — centralized, trust-dependent, opaque — is failing the people it was designed to serve. Patients are enrolled without compensation, their data used without oversight, and drugs are approved on the basis of selectively published evidence.
+TrialVault proposes a different foundation. One where privacy is structural rather than contractual. Where result integrity is mathematically proven rather than institutionally promised. Where patients are economic participants rather than research subjects. Where cross-hospital collaboration is cryptographically guaranteed rather than legally negotiated.
+The convergence of three forces makes this the right moment: FHE performance has reached clinical viability; Fhenix's CoFHE stack makes FHE contracts deployable as Solidity; and global regulatory pressure is creating urgent demand for exactly the guarantees FHE provides. The window for a privacy-native clinical trial infrastructure is open. TrialVault intends to build it.
+In a $54 billion market where 85% of trials fail to recruit on time, negative results are routinely buried, and patients earn nothing from their own health data — TrialVault offers something that has never existed before: a clinical trial platform where the mathematics guarantees what contracts merely promise.
+
+— TrialVault  ·  FHE-Native Clinical Trial Infrastructure  ·  Built on Fhenix  ·  2026 —
