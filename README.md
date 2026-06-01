@@ -17,26 +17,33 @@ TrialVault stores trial commitments, encrypted medical values, access grants, an
 ## Demo Flows
 
 - **Patient Portal:** enroll in a trial with encrypted baseline vitals, view personal results, and approve data access.
-- **Researcher Analytics:** run aggregate analysis over encrypted records and receive only population-level statistics.
-- **Pharma Submission:** generate a regulator-ready package with hashes, signatures, FHE computation receipts, and access logs.
+- **Doctor Verification Portal:** clinical investigators review off-chain records and cryptographically sign Patient Vaults to verify medical authenticity and grant FHE match point bonuses.
+- **Pharma Matching Engine:** run advanced matching using *Encrypted Match Scoring* (FHE arithmetic weights) against the patient pool to receive aggregate population counts.
+- **Regulator Dashboard:** monitor real-time encrypted adverse event severity against predefined safety thresholds.
 - **FDA Audit:** verify immutable records, consent coverage, audit completeness, and 21 CFR Part 11-style controls without viewing patient identities.
+
+## 🚀 Live Deployment
+
+- **Backend API (Render):** [https://trialvault-aa9g.onrender.com/](https://trialvault-aa9g.onrender.com/)
+- **Fhenix Testnet Deployment:** Ready for `npx hardhat run scripts/deploy.ts --network fhenix`
 
 ## Architecture
 
 ```mermaid
 sequenceDiagram
     participant Patient
+    participant Doctor
     participant TrialVault
-    participant Researcher
     participant Pharma
     participant Regulator
 
-    Patient->>TrialVault: Enroll with encrypted vitals and consent hash
-    Researcher->>TrialVault: Request aggregate statistics
-    TrialVault->>TrialVault: FHE compute on encrypted records
-    TrialVault-->>Researcher: Response rate, compliance, safety stats only
+    Patient->>TrialVault: Enroll with encrypted vitals and fhenix.js
+    Doctor->>TrialVault: ECDSA Sign Vault ID (Verify Authenticity)
+    Pharma->>TrialVault: Run Blind Match with Encrypted Scoring
+    TrialVault->>TrialVault: FHE.add() computes weighted match score
+    TrialVault-->>Pharma: Returns Aggregated Pool Count Only
     Pharma->>TrialVault: Generate submission proof package
-    Regulator->>TrialVault: Verify audit trail and integrity hashes
+    Regulator->>TrialVault: Verify audit trail and encrypted safety thresholds
 ```
 
 ## Repository
