@@ -122,6 +122,15 @@ app.get("/api/profiles/:wallet", requireMongo, async (req, res) => {
   }
 });
 
+app.get("/api/profiles", requireMongo, async (req, res) => {
+  try {
+    const profiles = await PatientProfile.find().sort({ updatedAt: -1 });
+    res.json(profiles);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/enrollments", requireMongo, async (req, res) => {
   try {
     const enrollment = new Enrollment(req.body);

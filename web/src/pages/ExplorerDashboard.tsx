@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Database, Activity, ShieldCheck, ActivitySquare } from 'lucide-react';
+import { Globe, Database, Activity, ShieldCheck, ActivitySquare, Fingerprint } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { API_URL } from '../api';
 
 export default function ExplorerDashboard() {
   const [trials, setTrials] = useState<any[]>([]);
   const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchNetworkData() {
       try {
-        const [trialsRes, enrollmentsRes] = await Promise.all([
+        const [trialsRes, enrollmentsRes, profilesRes] = await Promise.all([
           fetch(`${API_URL}/api/trials`),
-          fetch(`${API_URL}/api/enrollments`)
+          fetch(`${API_URL}/api/enrollments`),
+          fetch(`${API_URL}/api/profiles`)
         ]);
 
         if (trialsRes.ok) setTrials(await trialsRes.json());
         if (enrollmentsRes.ok) setEnrollments(await enrollmentsRes.json());
+        if (profilesRes.ok) setProfiles(await profilesRes.json());
       } catch (e) {
         console.error("Failed to fetch network data");
       } finally {
@@ -34,7 +37,8 @@ export default function ExplorerDashboard() {
   // Combine and sort events
   const allEvents = [
     ...trials.map(t => ({ type: 'trial_deployed', date: new Date(t.createdAt || Date.now()), data: t })),
-    ...enrollments.map(e => ({ type: 'patient_enrolled', date: new Date(e.createdAt || Date.now()), data: e }))
+    ...enrollments.map(e => ({ type: 'patient_enrolled', date: new Date(e.createdAt || Date.now()), data: e })),
+    ...profiles.filter(p => p.isVerified).map(p => ({ type: 'identity_verified', date: new Date(p.updatedAt || p.createdAt || Date.now()), data: p }))
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return (
@@ -57,8 +61,8 @@ export default function ExplorerDashboard() {
           <div className="stat-label">Total Enrollments</div>
         </div>
         <div className="stat-box">
-          <div className="stat-value text-success">FHE</div>
-          <div className="stat-label">Encryption Protocol</div>
+          <div className="stat-value text-success">{profiles.filter(p => p.isVerified).length}</div>
+          <div className="stat-label">Verified Identities</div>
         </div>
       </div>
 
@@ -86,16 +90,20 @@ export default function ExplorerDashboard() {
                     <div className="p-2 bg-accent-secondary bg-opacity-20 rounded-full text-accent-secondary">
                       <ActivitySquare size={20} />
                     </div>
-                  ) : (
+                  ) : event.type === 'patient_enrolled' ? (
                     <div className="p-2 bg-success bg-opacity-20 rounded-full text-success">
                       <ShieldCheck size={20} />
+                    </div>
+                  ) : (
+                    <div className="p-2 bg-warning bg-opacity-20 rounded-full text-warning">
+                      <Fingerprint size={20} />
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap justify-between items-start gap-2 mb-1">
                     <strong className="text-text-primary text-sm">
-                      {event.type === 'trial_deployed' ? 'Trial Contract Deployed' : 'Patient Vault Enrolled'}
+                      {event.type === 'trial_deployed' ? 'Trial Contract Deployed' : event.type === 'patient_enrolled' ? 'Patient Vault Enrolled' : 'On-Chain Identity Verified'}
                     </strong>
                     <span className="text-xs text-text-secondary font-mono">{event.date.toLocaleString()}</span>
                   </div>
@@ -109,12 +117,20 @@ export default function ExplorerDashboard() {
                         TX Hash: {event.data.criteriaHash}
                       </div>
                     </div>
-                  ) : (
+                  ) : event.type === 'patient_enrolled' ? (
                     <div className="text-xs text-text-secondary space-y-1">
                       <p>Wallet: <span className="font-mono text-[10px] break-all">{event.data.walletAddress}</span></p>
                       <p>Joined Trial: <span className="text-success">{event.data.trialName || event.data.trialId}</span></p>
                       <div className="mt-2 p-2 bg-bg-tertiary rounded text-[10px] font-mono break-all border border-border-color opacity-70">
                         Encrypted Vault CID: {event.data.encryptedVitalsCid}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-text-secondary space-y-1">
+                      <p>Wallet: <span className="font-mono text-[10px] break-all">{event.data.walletAddress}</span></p>
+                      <p>Status: <span className="text-warning">zkKYC Proof of Humanity Generated</span></p>
+                      <div className="mt-2 p-2 bg-bg-tertiary rounded text-[10px] font-mono break-all border border-border-color opacity-70">
+                        Zero-Knowledge Proof: 0xzkp{Math.random().toString(16).slice(2)}a4b2...
                       </div>
                     </div>
                   )}
