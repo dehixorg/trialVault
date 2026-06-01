@@ -96,8 +96,8 @@ export default function App() {
           <TrialStatusBar />
           <Routes>
             <Route path="/" element={<PatientDashboard />} />
-            <Route path="/pharma" element={<PharmaDashboard />} />
-            <Route path="/pharma-submission" element={<PharmaSubmissionDashboard />} />
+            <Route path="/researcher" element={<PharmaDashboard />} />
+            <Route path="/pharma" element={<PharmaSubmissionDashboard />} />
             <Route path="/regulator" element={<RegulatorDashboard />} />
             <Route path="/doctor" element={<DoctorDashboard />} />
           </Routes>
