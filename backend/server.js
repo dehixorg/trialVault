@@ -6,6 +6,8 @@ import Patient from "./src/models/tv_Patient.js";
 import Trial from "./src/models/tv_Trial.js";
 import License from "./src/models/tv_License.js";
 import CohortRequest from "./src/models/tv_CohortRequest.js";
+import PatientProfile from "./src/models/tv_PatientProfile.js";
+import Enrollment from "./src/models/tv_Enrollment.js";
 
 dotenv.config();
 
@@ -88,6 +90,61 @@ app.get("/api/patients", requireMongo, async (req, res) => {
   try {
     const patients = await Patient.find().sort({ createdAt: -1 });
     res.json(patients);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Patient Profile Routes
+app.post("/api/profiles", requireMongo, async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+    let profile = await PatientProfile.findOne({ walletAddress });
+    if (profile) {
+      Object.assign(profile, req.body);
+      profile.updatedAt = Date.now();
+    } else {
+      profile = new PatientProfile(req.body);
+    }
+    const savedProfile = await profile.save();
+    res.status(200).json(savedProfile);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/profiles/:wallet", requireMongo, async (req, res) => {
+  try {
+    const profile = await PatientProfile.findOne({ walletAddress: req.params.wallet });
+    res.json(profile);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/enrollments", requireMongo, async (req, res) => {
+  try {
+    const enrollment = new Enrollment(req.body);
+    const savedEnrollment = await enrollment.save();
+    res.status(201).json(savedEnrollment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/enrollments", requireMongo, async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find().sort({ createdAt: -1 });
+    res.json(enrollments);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/enrollments/:wallet", requireMongo, async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find({ walletAddress: req.params.wallet }).sort({ createdAt: -1 });
+    res.json(enrollments);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

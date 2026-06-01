@@ -6,6 +6,9 @@ import PharmaDashboard from './pages/PharmaDashboard';
 import RegulatorDashboard from './pages/RegulatorDashboard';
 import PharmaSubmissionDashboard from './pages/PharmaSubmissionDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
+import ProfileDashboard from './pages/ProfileDashboard';
+import PatientVerifyDashboard from './pages/PatientVerifyDashboard';
+import ExplorerDashboard from './pages/ExplorerDashboard';
 import TrialStatusBar from './components/TrialStatusBar';
 
 export default function App() {
@@ -24,11 +27,19 @@ export default function App() {
             
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <NavLink 
-                to="/" 
+                to="/profile" 
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               >
                 <Activity size={20} />
-                Patient Portal
+                My Profile
+              </NavLink>
+
+              <NavLink 
+                to="/" 
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              >
+                <Search size={20} />
+                Trial Marketplace
               </NavLink>
               
               <NavLink 
@@ -61,6 +72,26 @@ export default function App() {
               >
                 <Shield size={20} />
                 Doctor Verification
+              </NavLink>
+
+              <NavLink 
+                to="/explorer" 
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              >
+                <Activity size={20} />
+                Network Explorer
+              </NavLink>
+              
+              <div className="mt-8 mb-4">
+                <span className="form-label" style={{ paddingLeft: '1rem' }}>IDENTITY</span>
+              </div>
+              
+              <NavLink 
+                to="/verify" 
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              >
+                <Stethoscope size={20} />
+                Verify Profile
               </NavLink>
               
               <div className="mt-8 mb-4">
@@ -96,10 +127,13 @@ export default function App() {
           <TrialStatusBar />
           <Routes>
             <Route path="/" element={<PatientDashboard />} />
+            <Route path="/profile" element={<ProfileDashboard />} />
             <Route path="/researcher" element={<PharmaDashboard />} />
             <Route path="/pharma" element={<PharmaSubmissionDashboard />} />
             <Route path="/regulator" element={<RegulatorDashboard />} />
             <Route path="/doctor" element={<DoctorDashboard />} />
+            <Route path="/explorer" element={<ExplorerDashboard />} />
+            <Route path="/verify" element={<PatientVerifyDashboard />} />
           </Routes>
         </main>
       </div>

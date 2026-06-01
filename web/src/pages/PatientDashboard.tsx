@@ -1,64 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, ClipboardCheck, KeyRound, Shield, UserCheck, ShieldAlert, Database } from 'lucide-react';
-import { fhenixAdapter, type EncryptedPatientPayload } from '../fhenix';
+import { CheckCircle, Shield, ShieldAlert, Database, Search } from 'lucide-react';
+import { fhenixAdapter } from '../fhenix';
 import { API_URL } from '../api';
-
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 
 export default function PatientDashboard() {
   const { address, isConnected } = useAccount();
   
-  const [age, setAge] = useState('45');
-  const [bp, setBp] = useState('120 / 80');
-  const [hr, setHr] = useState('72 bpm');
-  const [dose, setDose] = useState('500 mg');
-
-  const [isEncrypting, setIsEncrypting] = useState(false);
-  const [enrolled, setEnrolled] = useState(false);
-  const [accessApproved, setAccessApproved] = useState(false);
-  
-  // Now stores an array of past enrollments
+  const [trials, setTrials] = useState<any[]>([]);
   const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>(null);
+
+  const [encryptingId, setEncryptingId] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchEnrollments() {
-      if (!address) return;
+    async function fetchData() {
       try {
-        const res = await fetch(`${API_URL}/api/patients/${address}`);
-        if (res.ok) {
-          const data = await res.json();
-          // data is an array since we updated server.js
-          if (data && data.length > 0) {
-            setEnrollments(data);
-            setEnrolled(true);
-          }
-        }
+        const [trialsRes, enrollmentsRes, profileRes] = await Promise.all([
+          fetch(`${API_URL}/api/trials`),
+          address ? fetch(`${API_URL}/api/enrollments/${address}`) : Promise.resolve({ ok: false, json: () => [] }),
+          address ? fetch(`${API_URL}/api/profiles/${address}`) : Promise.resolve({ ok: false, json: () => null })
+        ]);
+
+        if (trialsRes.ok) setTrials(await trialsRes.json());
+        if (enrollmentsRes.ok) setEnrollments(await enrollmentsRes.json());
+        if (profileRes.ok) setProfile(await profileRes.json());
       } catch (e) {
-        console.error("No existing enrollments found");
+        console.error("Failed to fetch data");
       }
     }
-    fetchEnrollments();
+    fetchData();
   }, [address]);
 
-  const enroll = async () => {
+  const enroll = async (trial: any) => {
     if (!isConnected || !address) return;
-    setIsEncrypting(true);
     
-    // Simulate FHE Encryption visually
+    // Check if profile exists
+    if (!profile) {
+      alert("Please create your Health Profile first!");
+      return;
+    }
+
+    setEncryptingId(trial._id);
+    
+    // Simulate FHE Encryption using Profile Data
     const payload = await fhenixAdapter.encryptPatientData({
-      age: parseInt(age) || 45,
-      systolicBp: parseInt(bp) || 120,
+      age: profile.age || 45,
+      systolicBp: parseInt(profile.baselineBp?.split('/')[0]) || 120,
     });
 
-    // Save to Render backend Database to persist data for demo
     try {
-      const res = await fetch(`${API_URL}/api/patients`, {
+      const res = await fetch(`${API_URL}/api/enrollments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           walletAddress: address,
+          trialId: trial._id || trial.criteriaHash,
+          trialName: trial.trialName,
           encryptedVitalsCid: payload.ciphertextHash,
         })
       });
@@ -68,76 +68,100 @@ export default function PatientDashboard() {
         setEnrollments(prev => [newEnrollment, ...prev]);
       }
     } catch (e) {
-      console.error("Failed to save to DB", e);
+      console.error("Failed to enroll", e);
     }
 
     setTimeout(() => {
-      setEnrolled(true);
-      setIsEncrypting(false);
+      setEncryptingId(null);
     }, 900);
+  };
+
+  const isEnrolled = (trialId: string) => {
+    return enrollments.some(e => e.trialId === trialId);
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="animate-fade-in">
       <header className="mb-8 flex flex-wrap gap-4 justify-between items-end">
         <div>
-          <h2 className="mb-2">Patient <span className="text-gradient">Portal</span></h2>
-          <p className="mb-0">Securely encrypt your health data and enroll in clinical trials using FHE.</p>
+          <h2 className="mb-2">Trial <span className="text-gradient">Marketplace</span></h2>
+          <p className="mb-0">Discover active trials, encrypt your profile vitals using FHE, and securely enroll.</p>
         </div>
         <ConnectButton showBalance={false} />
       </header>
 
       <div className="grid-2 mb-8">
+        
+        {/* AVAILABLE TRIALS SECTION */}
         <section className="glass-card">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="icon-tile"><ClipboardCheck /></div>
-            <div>
-              <h3 className="mb-0">Enroll in Trial TV-204</h3>
-              <p className="text-sm mb-0">Cardiovascular dose-response study, Phase II.</p>
-              <span className="privacy-badge mt-4">Encrypted before submission</span>
+          <h3 className="flex items-center gap-2 mb-6"><Search className="text-accent-primary" /> Active Trials</h3>
+          
+          {trials.length === 0 ? (
+            <div className="text-sm text-text-secondary italic opacity-70">
+              No active clinical trials available at the moment.
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+              {trials.map((trial, i) => {
+                const alreadyEnrolled = isEnrolled(trial._id || trial.criteriaHash);
+                const encryptingThis = encryptingId === trial._id;
 
-          <div className="grid-2 compact mt-6">
-            <div className="form-group">
-              <label className="form-label">Age</label>
-              <input className="form-input" value={age} onChange={e => setAge(e.target.value)} disabled={isEncrypting} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Baseline BP</label>
-              <input className="form-input" value={bp} onChange={e => setBp(e.target.value)} disabled={isEncrypting} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Heart Rate</label>
-              <input className="form-input" value={hr} onChange={e => setHr(e.target.value)} disabled={isEncrypting} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Dose</label>
-              <input className="form-input" value={dose} onChange={e => setDose(e.target.value)} disabled={isEncrypting} />
-            </div>
-          </div>
+                return (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-4 bg-bg-secondary border border-border-color rounded-lg flex flex-col justify-between"
+                  >
+                    <div className="mb-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <strong className="text-text-primary text-lg">{trial.trialName}</strong>
+                        <span className="privacy-badge">{trial.phase || 'Phase II'}</span>
+                      </div>
+                      <div className="text-xs text-text-secondary space-y-1">
+                        <p>Condition: <span className="text-accent-secondary">{trial.targetCondition || 'N/A'}</span></p>
+                        <p>Requires: Min Age {trial.minAge || 'N/A'}, Max BP {trial.maxBp || 'N/A'}</p>
+                        {trial.description && <p className="mt-2 opacity-80">{trial.description}</p>}
+                      </div>
+                    </div>
+                    
+                    {encryptingThis && (
+                      <div className="code-panel mb-4 text-[10px]">
+                        <span>Encrypting Profile Vitals (FHE)...</span>
+                        <code>age -&gt; euint32 | bp -&gt; euint32</code>
+                      </div>
+                    )}
 
-          {isEncrypting && (
-            <div className="code-panel mb-4">
-              <span>Encrypting locally with FHE-compatible ciphertext...</span>
-              <code>age -&gt; euint32 | systolic -&gt; euint32 | consent -&gt; hash</code>
+                    <button 
+                      className={alreadyEnrolled ? "btn-secondary" : "btn-primary"} 
+                      onClick={() => enroll(trial)} 
+                      disabled={!isConnected || alreadyEnrolled || encryptingId !== null}
+                    >
+                      {alreadyEnrolled ? (
+                        <><CheckCircle size={16} /> Enrolled</>
+                      ) : encryptingThis ? (
+                        <><Shield size={16} /> Encrypting...</>
+                      ) : (
+                        <><Shield size={16} /> Encrypt & Enroll</>
+                      )}
+                    </button>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
-
-          <button className="btn-primary w-full justify-center" onClick={enroll} disabled={!isConnected || isEncrypting}>
-            <Shield size={18} /> {isEncrypting ? 'Encrypting & Saving...' : 'Encrypt & Enroll'}
-          </button>
         </section>
 
+        {/* MY ENROLLMENTS SECTION */}
         <section className="glass-card">
-          <h3 className="flex items-center gap-2 mb-6"><Database size={20} className="text-accent-primary" /> My Enrollments</h3>
+          <h3 className="flex items-center gap-2 mb-6"><Database className="text-success" /> My Enrollments</h3>
           
           {enrollments.length === 0 ? (
             <div className="text-sm text-text-secondary italic opacity-70">
-              No previous enrollments found for this wallet.
+              You haven't enrolled in any trials yet.
             </div>
           ) : (
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
               {enrollments.map((env, i) => (
                 <motion.div 
                   key={i}
@@ -145,12 +169,15 @@ export default function PatientDashboard() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="p-4 bg-success bg-opacity-10 border border-success border-opacity-30 rounded-lg"
                 >
-                  <div className="flex items-center gap-2 text-success font-bold mb-2">
-                    <CheckCircle size={18} />
-                    Vault Sealed & Saved to DB
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2 text-success font-bold">
+                      <CheckCircle size={18} />
+                      {env.trialName || 'Unknown Trial'}
+                    </div>
                   </div>
-                  <div className="text-xs text-text-secondary space-y-1 font-mono">
-                    <p>IPFS CID: <span className="text-text-primary truncate block">{env.encryptedVitalsCid.slice(0, 25)}...</span></p>
+                  
+                  <div className="text-xs text-text-secondary space-y-1 font-mono break-all">
+                    <p>Vault CID: <span className="text-text-primary">{env.encryptedVitalsCid}</span></p>
                     <p>Time: <span className="text-text-primary">{new Date(env.createdAt || Date.now()).toLocaleString()}</span></p>
                   </div>
 
@@ -159,7 +186,7 @@ export default function PatientDashboard() {
                     <div>
                       <div className="text-xs font-bold text-warning">Unverified Medical Record</div>
                       <div className="text-[10px] text-text-secondary mt-1">
-                        Your data is encrypted, but to receive higher match scores from Pharma, you must have your primary care physician cryptographically sign this Vault ID.
+                        Your data is encrypted. To receive higher match scores, your primary care physician must cryptographically sign this Vault ID.
                       </div>
                     </div>
                   </div>
@@ -167,27 +194,6 @@ export default function PatientDashboard() {
               ))}
             </div>
           )}
-        </section>
-      </div>
-
-      <div className="grid-2 mb-8">
-        <section className="glass-card border-success">
-          <h3 className="flex items-center gap-2 mb-4"><KeyRound size={20} /> Data Access</h3>
-          <div className="access-request">
-            <div>
-              <strong>Principal Investigator</strong>
-              <p>Requests aggregate-only access for 30 days. No patient name or raw vitals disclosed.</p>
-            </div>
-            <button className="btn-secondary" onClick={() => setAccessApproved(true)}>
-              <UserCheck size={16} /> {accessApproved ? 'Approved' : 'Approve'}
-            </button>
-          </div>
-
-          <div className="audit-list mt-8">
-            <p><CheckCircle size={16} /> Consent form hash committed on-chain</p>
-            <p><CheckCircle size={16} /> Baseline vitals encrypted before upload</p>
-            <p><CheckCircle size={16} /> Access grant expires automatically</p>
-          </div>
         </section>
       </div>
     </motion.div>

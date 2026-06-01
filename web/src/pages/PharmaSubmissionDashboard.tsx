@@ -17,8 +17,12 @@ export default function PharmaSubmissionDashboard() {
   const [trials, setTrials] = useState<any[]>([]);
 
   // Form State
-  const [trialName, setTrialName] = useState('CardioVasc-X Phase II');
+  const [trialName, setTrialName] = useState('CardioVasc-X');
+  const [phase, setPhase] = useState('Phase II');
+  const [protocolNumber, setProtocolNumber] = useState('TV-001');
   const [targetCondition, setTargetCondition] = useState('Hypertension');
+  const [description, setDescription] = useState('A 12-week dose response study for adult patients.');
+  const [expectedParticipants, setExpectedParticipants] = useState('100');
   const [minAge, setMinAge] = useState('40');
   const [maxBp, setMaxBp] = useState('140');
 
@@ -60,6 +64,10 @@ export default function PharmaSubmissionDashboard() {
         body: JSON.stringify({
           sponsorAddress: address,
           trialName,
+          phase,
+          protocolNumber,
+          description,
+          expectedParticipants: parseInt(expectedParticipants),
           targetCondition,
           minAge: parseInt(minAge),
           maxBp: parseInt(maxBp),
@@ -93,29 +101,50 @@ export default function PharmaSubmissionDashboard() {
       <div className="grid-2 mb-8">
         {/* CREATE TRIAL SECTION */}
         <section className="glass-card">
-          <h3 className="mb-6 flex items-center gap-2"><PlusCircle className="text-accent-secondary" /> Create New Trial</h3>
+          <h3 className="mb-6 flex items-center gap-2"><PlusCircle className="text-accent-secondary" /> Deploy New Protocol</h3>
           
           <div>
-            <div className="grid-2 compact mb-6">
-              <div className="form-group">
+            <div className="grid-2 compact mb-4">
+              <div className="form-group mb-0">
                 <label className="form-label">Trial Name</label>
                 <input className="form-input" value={trialName} onChange={e => setTrialName(e.target.value)} disabled={deploying} />
               </div>
-              <div className="form-group">
+              <div className="form-group mb-0">
+                <label className="form-label">Phase</label>
+                <input className="form-input" value={phase} onChange={e => setPhase(e.target.value)} disabled={deploying} />
+              </div>
+              <div className="form-group mb-0">
+                <label className="form-label">Protocol Number</label>
+                <input className="form-input" value={protocolNumber} onChange={e => setProtocolNumber(e.target.value)} disabled={deploying} />
+              </div>
+              <div className="form-group mb-0">
                 <label className="form-label">Target Condition</label>
                 <input className="form-input" value={targetCondition} onChange={e => setTargetCondition(e.target.value)} disabled={deploying} />
               </div>
-              <div className="form-group">
+            </div>
+
+            <div className="form-group mb-4">
+              <label className="form-label">Study Description</label>
+              <input className="form-input" value={description} onChange={e => setDescription(e.target.value)} disabled={deploying} />
+            </div>
+
+            <div className="grid-3 compact mb-6">
+              <div className="form-group mb-0">
+                <label className="form-label">Expected Cohort</label>
+                <input className="form-input" type="number" value={expectedParticipants} onChange={e => setExpectedParticipants(e.target.value)} disabled={deploying} />
+              </div>
+              <div className="form-group mb-0">
                 <label className="form-label">Min Age</label>
                 <input className="form-input" type="number" value={minAge} onChange={e => setMinAge(e.target.value)} disabled={deploying} />
               </div>
-              <div className="form-group">
+              <div className="form-group mb-0">
                 <label className="form-label">Max Base BP</label>
                 <input className="form-input" type="number" value={maxBp} onChange={e => setMaxBp(e.target.value)} disabled={deploying} />
               </div>
             </div>
+
             <button className="btn-secondary w-full justify-center" onClick={handleCreateTrial} disabled={!isConnected || deploying}>
-              <CheckCircle size={18} /> {deploying ? 'Deploying to Chain & DB...' : 'Deploy Trial Smart Contract'}
+              <CheckCircle size={18} /> {deploying ? 'Deploying to Chain & DB...' : 'Deploy Smart Contract'}
             </button>
             {!isConnected && <p className="text-xs text-warning mt-2 text-center">Connect wallet to deploy trial</p>}
           </div>
@@ -129,7 +158,7 @@ export default function PharmaSubmissionDashboard() {
               No trials have been deployed yet.
             </div>
           ) : (
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
               {trials.map((trial, i) => (
                 <motion.div 
                   key={i}
@@ -138,14 +167,24 @@ export default function PharmaSubmissionDashboard() {
                   className="p-4 bg-bg-secondary border border-border-color rounded-lg"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <strong className="text-text-primary text-lg">{trial.trialName}</strong>
+                    <div>
+                      <strong className="text-text-primary text-lg block">{trial.trialName}</strong>
+                      <span className="text-xs text-text-secondary">{trial.protocolNumber} • {trial.phase}</span>
+                    </div>
                     <span className="privacy-badge">Active</span>
                   </div>
                   <div className="text-xs text-text-secondary space-y-1">
-                    <p>Condition: <span className="text-accent-secondary">{trial.targetCondition || 'N/A'}</span></p>
-                    <p>Benchmarks: Min Age {trial.minAge || 'N/A'} | Max BP {trial.maxBp || 'N/A'}</p>
-                    <p className="font-mono mt-2 truncate text-[10px]">Contract: {trial.criteriaHash}</p>
-                    <p className="font-mono truncate text-[10px]">Sponsor: {trial.sponsorAddress}</p>
+                    <p className="mt-2 text-text-primary">{trial.description}</p>
+                    <div className="grid-2 compact mt-2">
+                      <p>Condition: <span className="text-accent-secondary">{trial.targetCondition || 'N/A'}</span></p>
+                      <p>Target: {trial.expectedParticipants} subjects</p>
+                      <p>Min Age: {trial.minAge || 'N/A'}</p>
+                      <p>Max BP: {trial.maxBp || 'N/A'}</p>
+                    </div>
+                    <div className="mt-3 p-2 bg-bg-tertiary rounded text-[10px] font-mono break-all border border-border-color">
+                      <span className="text-text-secondary block mb-1">Contract Hash:</span>
+                      {trial.criteriaHash}
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -171,9 +210,9 @@ export default function PharmaSubmissionDashboard() {
         <section className="glass-card">
           <h3 className="mb-6 flex items-center gap-2"><Fingerprint className="text-accent-secondary" /> Integrity Proof</h3>
           <div className="proof-grid">
-            <div><span>Dataset Hash</span><code>{trialStatus.datasetHash}</code></div>
-            <div><span>Access Log Root</span><code>{trialStatus.accessLogRoot}</code></div>
-            <div><span>Computation Receipt</span><code>{trialStatus.computationReceipt}</code></div>
+            <div><span>Dataset Hash</span><code className="break-all">{trialStatus.datasetHash}</code></div>
+            <div><span>Access Log Root</span><code className="break-all">{trialStatus.accessLogRoot}</code></div>
+            <div><span>Computation Receipt</span><code className="break-all">{trialStatus.computationReceipt}</code></div>
             <div><span>Local Cohort</span><strong>{demoAggregate.cohortSize} synthetic records</strong></div>
             <div><span>Submission Status</span><strong>{generated ? 'Ready' : 'Draft'}</strong></div>
           </div>

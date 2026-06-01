@@ -3,6 +3,10 @@ import mongoose from 'mongoose';
 const TrialSchema = new mongoose.Schema({
   sponsorAddress: { type: String, required: true },
   trialName: { type: String, required: true },
+  phase: { type: String, default: "Phase II" },
+  protocolNumber: { type: String, default: "TV-001" },
+  description: { type: String },
+  expectedParticipants: { type: Number, default: 100 },
   targetCondition: { type: String },
   minAge: { type: Number },
   maxBp: { type: Number },
