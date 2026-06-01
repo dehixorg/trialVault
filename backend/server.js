@@ -77,8 +77,17 @@ app.post("/api/patients", requireMongo, async (req, res) => {
 
 app.get("/api/patients/:wallet", requireMongo, async (req, res) => {
   try {
-    const patient = await Patient.findOne({ walletAddress: req.params.wallet });
-    res.json(patient);
+    const patients = await Patient.find({ walletAddress: req.params.wallet }).sort({ createdAt: -1 });
+    res.json(patients);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/patients", requireMongo, async (req, res) => {
+  try {
+    const patients = await Patient.find().sort({ createdAt: -1 });
+    res.json(patients);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

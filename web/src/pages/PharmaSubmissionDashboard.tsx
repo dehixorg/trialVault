@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Download, FileCheck, Fingerprint, PackageCheck, PlusCircle } from 'lucide-react';
+import { CheckCircle, Download, FileCheck, Fingerprint, PackageCheck, PlusCircle, Database } from 'lucide-react';
 import { evidencePackage, trialStatus } from '../trialData';
 import demoAggregate from '../data/demoAggregate.json';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -12,13 +12,30 @@ export default function PharmaSubmissionDashboard() {
   
   const [generated, setGenerated] = useState(false);
   const [deploying, setDeploying] = useState(false);
-  const [trialDeployed, setTrialDeployed] = useState(false);
+  
+  // List of deployed trials
+  const [trials, setTrials] = useState<any[]>([]);
 
   // Form State
   const [trialName, setTrialName] = useState('CardioVasc-X Phase II');
   const [targetCondition, setTargetCondition] = useState('Hypertension');
   const [minAge, setMinAge] = useState('40');
   const [maxBp, setMaxBp] = useState('140');
+
+  useEffect(() => {
+    async function fetchTrials() {
+      try {
+        const res = await fetch(`${API_URL}/api/trials`);
+        if (res.ok) {
+          const data = await res.json();
+          setTrials(data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch trials");
+      }
+    }
+    fetchTrials();
+  }, []);
 
   const exportEvidence = () => {
     const blob = new Blob([JSON.stringify(evidencePackage, null, 2)], {
@@ -37,7 +54,7 @@ export default function PharmaSubmissionDashboard() {
     setDeploying(true);
     
     try {
-      await fetch(`${API_URL}/api/trials`, {
+      const res = await fetch(`${API_URL}/api/trials`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -49,45 +66,35 @@ export default function PharmaSubmissionDashboard() {
           criteriaHash: "0xMockHash" + Math.random().toString(16).slice(2)
         })
       });
+
+      if (res.ok) {
+        const newTrial = await res.json();
+        setTrials(prev => [newTrial, ...prev]);
+      }
     } catch (e) {
       console.error("Failed to save trial to DB", e);
     }
 
     setTimeout(() => {
       setDeploying(false);
-      setTrialDeployed(true);
-    }, 1500);
+    }, 1000);
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="animate-fade-in">
-      <header className="mb-8 flex justify-between items-end">
+      <header className="mb-8 flex flex-wrap gap-4 justify-between items-end">
         <div>
-          <h2 className="mb-2">Pharma <span className="text-gradient">Submission</span></h2>
-          <p>Create trials and generate FDA-ready evidence packages with encrypted data commitments.</p>
+          <h2 className="mb-2">Pharma <span className="text-gradient">Sponsor</span></h2>
+          <p className="mb-0">Define trial criteria and deploy privacy-preserving smart contracts.</p>
         </div>
         <ConnectButton showBalance={false} />
       </header>
 
-      {/* CREATE TRIAL SECTION */}
-      <section className="glass-card mb-8">
-        <h3 className="mb-6 flex items-center gap-2"><PlusCircle className="text-accent-secondary" /> Create New Trial</h3>
-        
-        {trialDeployed ? (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="p-4 bg-success bg-opacity-10 border border-success border-opacity-30 rounded-lg"
-          >
-            <div className="flex items-center gap-2 text-success font-bold mb-2">
-              <CheckCircle size={18} />
-              Trial Smart Contract Deployed & Saved to DB
-            </div>
-            <div className="text-sm text-text-secondary">
-              <strong>{trialName}</strong> for <strong>{targetCondition}</strong> is now live. Minimum Age: {minAge}, Max Base BP: {maxBp}.
-            </div>
-          </motion.div>
-        ) : (
+      <div className="grid-2 mb-8">
+        {/* CREATE TRIAL SECTION */}
+        <section className="glass-card">
+          <h3 className="mb-6 flex items-center gap-2"><PlusCircle className="text-accent-secondary" /> Create New Trial</h3>
+          
           <div>
             <div className="grid-2 compact mb-6">
               <div className="form-group">
@@ -99,11 +106,11 @@ export default function PharmaSubmissionDashboard() {
                 <input className="form-input" value={targetCondition} onChange={e => setTargetCondition(e.target.value)} disabled={deploying} />
               </div>
               <div className="form-group">
-                <label className="form-label">Min Age Benchmark</label>
+                <label className="form-label">Min Age</label>
                 <input className="form-input" type="number" value={minAge} onChange={e => setMinAge(e.target.value)} disabled={deploying} />
               </div>
               <div className="form-group">
-                <label className="form-label">Max Base BP Benchmark</label>
+                <label className="form-label">Max Base BP</label>
                 <input className="form-input" type="number" value={maxBp} onChange={e => setMaxBp(e.target.value)} disabled={deploying} />
               </div>
             </div>
@@ -112,15 +119,47 @@ export default function PharmaSubmissionDashboard() {
             </button>
             {!isConnected && <p className="text-xs text-warning mt-2 text-center">Connect wallet to deploy trial</p>}
           </div>
-        )}
-      </section>
+        </section>
+
+        {/* LIST OF TRIALS SECTION */}
+        <section className="glass-card">
+          <h3 className="mb-6 flex items-center gap-2"><Database className="text-accent-primary" /> Deployed Trials</h3>
+          {trials.length === 0 ? (
+            <div className="text-sm text-text-secondary italic opacity-70">
+              No trials have been deployed yet.
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+              {trials.map((trial, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 bg-bg-secondary border border-border-color rounded-lg"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <strong className="text-text-primary text-lg">{trial.trialName}</strong>
+                    <span className="privacy-badge">Active</span>
+                  </div>
+                  <div className="text-xs text-text-secondary space-y-1">
+                    <p>Condition: <span className="text-accent-secondary">{trial.targetCondition || 'N/A'}</span></p>
+                    <p>Benchmarks: Min Age {trial.minAge || 'N/A'} | Max BP {trial.maxBp || 'N/A'}</p>
+                    <p className="font-mono mt-2 truncate text-[10px]">Contract: {trial.criteriaHash}</p>
+                    <p className="font-mono truncate text-[10px]">Sponsor: {trial.sponsorAddress}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
 
       <div className="grid-2 mb-8">
         <section className="glass-card">
           <h3 className="mb-6 flex items-center gap-2"><PackageCheck className="text-accent-primary" /> Submission Builder</h3>
           <div className="audit-list mb-8">
-            <p><CheckCircle size={16} /> Protocol hash linked to {trialName}</p>
-            <p><CheckCircle size={16} /> 450 encrypted patient records committed</p>
+            <p><CheckCircle size={16} /> Protocol hash linked to selected trial</p>
+            <p><CheckCircle size={16} /> Encrypted patient records committed</p>
             <p><CheckCircle size={16} /> FHE aggregate analytics receipt attached</p>
             <p><CheckCircle size={16} /> Investigator and sponsor signatures verified</p>
           </div>
