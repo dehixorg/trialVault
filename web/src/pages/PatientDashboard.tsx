@@ -3,15 +3,18 @@ import { motion } from 'framer-motion';
 import { CheckCircle, ClipboardCheck, KeyRound, Shield, UserCheck, Wallet, ShieldAlert } from 'lucide-react';
 import { fhenixAdapter, type EncryptedPatientPayload } from '../fhenix';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
+
 export default function PatientDashboard() {
-  const [walletConnected, setWalletConnected] = useState(false);
+  const { isConnected } = useAccount();
   const [isEncrypting, setIsEncrypting] = useState(false);
   const [enrolled, setEnrolled] = useState(false);
   const [accessApproved, setAccessApproved] = useState(false);
   const [encryptedPayload, setEncryptedPayload] = useState<EncryptedPatientPayload | null>(null);
 
   const enroll = async () => {
-    if (!walletConnected) return;
+    if (!isConnected) return;
     setIsEncrypting(true);
     const payload = await fhenixAdapter.encryptPatientData({
       age: 45,
@@ -34,9 +37,7 @@ export default function PatientDashboard() {
           <h2 className="mb-2">Patient <span className="text-gradient">Portal</span></h2>
           <p className="mb-0">Enroll in a clinical trial with encrypted baseline data and patient-controlled access.</p>
         </div>
-        <button className={walletConnected ? 'btn-secondary' : 'btn-primary'} onClick={() => setWalletConnected(true)}>
-          <Wallet size={18} /> {walletConnected ? '0x4F9...b1A2' : 'Connect Wallet'}
-        </button>
+        <ConnectButton showBalance={false} />
       </header>
 
       <div className="grid-2 mb-8">
@@ -111,7 +112,7 @@ export default function PatientDashboard() {
             </div>
           )}
 
-          <button className="btn-primary w-full justify-center" onClick={enroll} disabled={!walletConnected || enrolled || isEncrypting}>
+          <button className="btn-primary w-full justify-center" onClick={enroll} disabled={!isConnected || enrolled || isEncrypting}>
             <Shield size={18} /> {enrolled ? 'Encrypted Enrollment Recorded' : isEncrypting ? 'Encrypting...' : 'Encrypt & Enroll'}
           </button>
         </section>

@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Stethoscope, FileSignature, CheckCircle, ShieldAlert, Fingerprint } from 'lucide-react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
 
 export default function DoctorDashboard() {
+  const { isConnected } = useAccount();
   const [patientId, setPatientId] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationComplete, setVerificationComplete] = useState(false);
 
   const handleVerify = () => {
+    if (!isConnected) return;
     setIsVerifying(true);
     setTimeout(() => {
       setIsVerifying(false);
@@ -26,9 +30,12 @@ export default function DoctorDashboard() {
           <h2 className="mb-2">Clinical <span className="text-gradient">Investigator</span></h2>
           <p className="mb-0">Cryptographically verify patient data to ensure medical authenticity.</p>
         </div>
-        <div className="px-4 py-2 bg-accent-primary bg-opacity-10 text-accent-primary border border-accent-primary border-opacity-20 rounded-lg flex items-center gap-2 text-sm font-mono">
-          <Stethoscope size={16} />
-          Dr. Authorized Node
+        <div className="flex items-center gap-4">
+          <div className="px-4 py-2 bg-accent-primary bg-opacity-10 text-accent-primary border border-accent-primary border-opacity-20 rounded-lg flex items-center gap-2 text-sm font-mono">
+            <Stethoscope size={16} />
+            Dr. Authorized Node
+          </div>
+          <ConnectButton showBalance={false} />
         </div>
       </header>
 
@@ -59,7 +66,7 @@ export default function DoctorDashboard() {
           <button 
             className="btn-primary w-full justify-center mt-4" 
             onClick={handleVerify}
-            disabled={!patientId || isVerifying || verificationComplete}
+            disabled={!patientId || isVerifying || verificationComplete || !isConnected}
           >
             {isVerifying ? (
               <span>Signing Cryptographically...</span>

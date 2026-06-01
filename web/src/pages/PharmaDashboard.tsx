@@ -4,8 +4,11 @@ import { BarChart3, ChevronRight, Lock, ShieldCheck } from 'lucide-react';
 import FheVisualizer from '../components/FheVisualizer';
 import { trialStatus } from '../trialData';
 import demoAggregate from '../data/demoAggregate.json';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
 
 export default function PharmaDashboard() {
+  const { isConnected } = useAccount();
   const [isComputing, setIsComputing] = useState(false);
   const [statsReady, setStatsReady] = useState(false);
 
@@ -40,9 +43,13 @@ export default function PharmaDashboard() {
             <Lock className="text-accent-primary" size={20} />
             <span className="text-sm">FHE computes response, compliance, and adverse-event aggregates over encrypted rows.</span>
           </div>
-          <button className="btn-primary" onClick={runAnalytics} disabled={isComputing}>
-            {isComputing ? 'Computing...' : 'Run FHE Analytics'} {!isComputing && <ChevronRight size={18} />}
-          </button>
+          {isConnected ? (
+            <button className="btn-primary" onClick={runAnalytics} disabled={isComputing}>
+              {isComputing ? 'Computing...' : 'Run FHE Analytics'} {!isComputing && <ChevronRight size={18} />}
+            </button>
+          ) : (
+            <ConnectButton showBalance={false} />
+          )}
         </div>
       </section>
 
