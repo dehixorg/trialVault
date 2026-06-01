@@ -4,8 +4,8 @@ import { Lock, Cpu, Database, CheckCircle } from 'lucide-react';
 
 export default function FheVisualizer({ onComplete }: { onComplete: () => void }) {
   // Sequence: 
-  // 1. Initial State (Plaintext query)
-  // 2. Encryption (Ciphertext query)
+  // 1. Initial State (analytics request)
+  // 2. Encryption (ciphertext records)
   // 3. Network Compute (Homomorphic operations)
   // 4. Result (Aggregated value)
 
@@ -20,7 +20,7 @@ export default function FheVisualizer({ onComplete }: { onComplete: () => void }
       
       <h3 className="mb-6 flex items-center gap-2">
         <Cpu className="text-accent-primary" />
-        FHE Compute Visualizer
+        FHE Clinical Analytics
       </h3>
 
       <div className="flex items-center justify-between px-8 py-4 relative">
@@ -33,7 +33,7 @@ export default function FheVisualizer({ onComplete }: { onComplete: () => void }
           >
             <Lock className="text-text-secondary" />
           </motion.div>
-          <span className="text-xs font-mono text-text-secondary text-center">Encrypt<br/>Criteria</span>
+          <span className="text-xs font-mono text-text-secondary text-center">Load Encrypted<br/>Records</span>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: "100%" }}
@@ -53,14 +53,14 @@ export default function FheVisualizer({ onComplete }: { onComplete: () => void }
           >
             <Database className="text-accent-primary" size={32} />
           </motion.div>
-          <span className="text-xs font-mono text-accent-primary text-center">Blind Evaluate<br/>on Network</span>
+          <span className="text-xs font-mono text-accent-primary text-center">Compute<br/>Aggregates</span>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
             className="absolute -top-4 -right-4"
           >
-            <span className="text-[10px] bg-accent-primary text-white px-2 py-1 rounded-full">FHE.gte()</span>
+            <span className="text-[10px] bg-accent-primary text-white px-2 py-1 rounded-full">FHE.select()</span>
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
@@ -89,7 +89,7 @@ export default function FheVisualizer({ onComplete }: { onComplete: () => void }
           >
             <CheckCircle className="text-success" />
           </motion.div>
-          <span className="text-xs font-mono text-success text-center">Aggregated<br/>Pool Count</span>
+          <span className="text-xs font-mono text-success text-center">Privacy-Safe<br/>Statistics</span>
         </div>
       </div>
 

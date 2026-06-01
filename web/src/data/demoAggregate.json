@@ -1,0 +1,9 @@
+{
+  "trialId": "TV-204",
+  "cohortSize": 50,
+  "responseRatePercentage": 80,
+  "averageAdverseEventSeverity": 0.66,
+  "averageCompliancePercentage": 86.6,
+  "encryptedComputationReceipt": "0x1e230731768f523a1eb8b462d7cb6fc967719aea960387a6576702080d846458",
+  "piiDisclosed": false
+}

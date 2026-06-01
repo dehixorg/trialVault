@@ -1,12 +1,13 @@
-# TrialVault API (MVP)
+# TrialVault API
 
-This minimal API logs encrypted cohort requests for demo and submission purposes.
+Express API for TrialVault demo data, encrypted cohort requests, patient records, trial metadata, and licensing records.
 
-## Run
+## Local Run
 
 ```bash
-cd /Users/arpitchauhan/Desktop/akindo/trialVault/backend
+cd backend
 npm install
+cp .env.example .env
 npm run dev
 ```
 
@@ -15,10 +16,30 @@ The API listens on port `5175` by default.
 ## Endpoints
 
 - `GET /health` — quick health check
+- `GET /` — service metadata
 - `POST /cohort-requests` — log encrypted cohort requests
 - `GET /cohort-requests?limit=10` — read back recent requests
+- `POST /api/patients`
+- `GET /api/patients/:wallet`
+- `POST /api/trials`
+- `GET /api/trials`
+- `POST /api/licenses`
+- `GET /api/licenses/:wallet`
 
-## Data Storage
+## Render Deployment
 
-Requests are stored as JSON lines in:
-`/Users/arpitchauhan/Desktop/akindo/trialVault/backend/data/requests.jsonl`
+This repository includes a root `render.yaml`.
+
+Required Render environment variables:
+
+- `MONGO_URI` — MongoDB Atlas connection string
+- `CLIENT_ORIGIN` — deployed frontend URL, for example `https://trialvault.vercel.app`
+
+Render settings:
+
+- Root directory: `backend`
+- Build command: `npm ci`
+- Start command: `npm start`
+- Health check path: `/health`
+
+If `MONGO_URI` is missing, `/health` still returns `ok`, but database-backed routes return `503` with a clear setup message.

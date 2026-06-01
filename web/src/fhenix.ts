@@ -3,6 +3,11 @@ export type EncryptedCriteria = {
   payload: Record<string, unknown>;
 };
 
+export type EncryptedPatientPayload = {
+  ciphertextHash: string;
+  fields: Record<string, string>;
+};
+
 type ConnectResult = {
   address: string;
   networkName: string;
@@ -38,6 +43,21 @@ export class FhenixAdapter {
       criteriaHash: buildHash(),
       payload,
     };
+  }
+
+  async encryptPatientData(payload: Record<string, number | string>): Promise<EncryptedPatientPayload> {
+    const fields = Object.fromEntries(
+      Object.entries(payload).map(([key]) => [key, buildHash()])
+    );
+
+    return {
+      ciphertextHash: buildHash(),
+      fields,
+    };
+  }
+
+  async requestAggregateReceipt(): Promise<string> {
+    return buildHash();
   }
 
   async requestCohortCount(): Promise<number> {

@@ -5,7 +5,7 @@ import "@fhenixprotocol/contracts/FHE.sol";
 import "@fhenixprotocol/contracts/access/Permissioned.sol";
 
 contract TrialVault is Permissioned {
-    // --- MODULE 1: Patient Data Vault ---
+    // --- MODULE 1: Encrypted Clinical Trial Participant Vault ---
     struct PatientData {
         address patient;
         string ipfsCid;
@@ -49,7 +49,7 @@ contract TrialVault is Permissioned {
         return tokenId;
     }
 
-    // --- MODULE 2: Trial Matching Engine ---
+    // --- MODULE 2: FHE Trial Analytics Engine ---
     struct TrialCriteria {
         string name;
         euint8 encDiagnosisRequired;
@@ -81,7 +81,7 @@ contract TrialVault is Permissioned {
         criteria.encMinAge = FHE.asEuint32(inEncMinAge);
         criteria.encMaxAge = FHE.asEuint32(inEncMaxAge);
         criteria.encLabMin = FHE.asEuint32(inEncLabMin);
-        criteria.encLabMax = FHE.asEuint32(inEncMaxAge);
+        criteria.encLabMax = FHE.asEuint32(inEncLabMax);
         criteria.sponsor = msg.sender;
 
         trialPoolCounts[trialId] = FHE.asEuint32(0);
@@ -120,7 +120,7 @@ contract TrialVault is Permissioned {
         return FHE.decrypt(trialPoolCounts[trialId]);
     }
 
-    // --- MODULE 3: Data Licensing Marketplace ---
+    // --- MODULE 3: Patient-Controlled Data Access Marketplace ---
     struct License {
         uint256 datasetId;
         address licensee;
@@ -166,7 +166,7 @@ contract TrialVault is Permissioned {
         emit LicenseGranted(licenseId, msg.sender, license.licensee);
     }
 
-    // --- MODULE 4: Cross-Hospital Encrypted Analysis ---
+    // --- MODULE 4: Cross-Site Encrypted Analysis ---
     struct HospitalTrial {
         uint8 analysisType;
         uint8 dpEpsilon;
@@ -242,7 +242,7 @@ contract TrialVault is Permissioned {
         emit ResultsPublished(commitId, resultsHash, true);
     }
 
-    // --- MODULE 6: Adverse Event Reporting ---
+    // --- MODULE 6: Encrypted Adverse Event Reporting ---
     euint32 public encryptedTotalSeverity;
     euint32 public encryptedAlertThreshold;
 

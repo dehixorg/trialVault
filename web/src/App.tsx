@@ -1,9 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
-import { Shield, Activity, Database, Lock, Search, Eye } from 'lucide-react';
+import { Shield, Activity, FileCheck, FileSearch, Search, Stethoscope } from 'lucide-react';
 import PatientDashboard from './pages/PatientDashboard';
 import PharmaDashboard from './pages/PharmaDashboard';
 import RegulatorDashboard from './pages/RegulatorDashboard';
+import PharmaSubmissionDashboard from './pages/PharmaSubmissionDashboard';
+import TrialStatusBar from './components/TrialStatusBar';
 
 export default function App() {
   return (
@@ -25,36 +27,44 @@ export default function App() {
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               >
                 <Activity size={20} />
-                Patient Vault
+                Patient Portal
               </NavLink>
               
+              <NavLink 
+                to="/researcher" 
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              >
+                <Search size={20} />
+                Research Analytics
+              </NavLink>
+
               <NavLink 
                 to="/pharma" 
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               >
-                <Search size={20} />
-                Trial Matching
+                <FileCheck size={20} />
+                Pharma Submission
               </NavLink>
 
               <NavLink 
                 to="/regulator" 
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               >
-                <Eye size={20} />
-                Regulator Oversight
+                <FileSearch size={20} />
+                FDA Audit
               </NavLink>
               
               <div className="mt-8 mb-4">
-                <span className="form-label" style={{ paddingLeft: '1rem' }}>NETWORK</span>
+                <span className="form-label" style={{ paddingLeft: '1rem' }}>COMPLIANCE</span>
               </div>
               
               <div className="nav-link" style={{ opacity: 0.5, cursor: 'not-allowed' }}>
-                <Database size={20} />
-                Licensing Market
+                <Stethoscope size={20} />
+                HIPAA Controls
               </div>
               <div className="nav-link" style={{ opacity: 0.5, cursor: 'not-allowed' }}>
-                <Lock size={20} />
-                Integrity Layer
+                <Activity size={20} />
+                21 CFR Part 11
               </div>
             </nav>
           </div>
@@ -63,10 +73,10 @@ export default function App() {
             <div className="glass-card" style={{ padding: '1rem' }}>
               <div className="flex items-center gap-2 mb-2">
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)' }}></div>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Fhenix Testnet</span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>FHE Trial Vault</span>
               </div>
               <p style={{ fontSize: '0.75rem', marginBottom: 0, color: 'var(--text-secondary)' }}>
-                FHE-Native Privacy Enabled
+                Patient data encrypted by default
               </p>
             </div>
           </div>
@@ -74,9 +84,11 @@ export default function App() {
 
         {/* Main Content */}
         <main className="main-content">
+          <TrialStatusBar />
           <Routes>
             <Route path="/" element={<PatientDashboard />} />
-            <Route path="/pharma" element={<PharmaDashboard />} />
+            <Route path="/researcher" element={<PharmaDashboard />} />
+            <Route path="/pharma" element={<PharmaSubmissionDashboard />} />
             <Route path="/regulator" element={<RegulatorDashboard />} />
           </Routes>
         </main>
