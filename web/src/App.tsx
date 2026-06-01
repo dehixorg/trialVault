@@ -1,10 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
-import { Shield, Activity, FileCheck, FileSearch, Search, Stethoscope } from 'lucide-react';
+import { Shield, Activity, FileCheck, FileSearch, Search, Stethoscope, Eye } from 'lucide-react';
 import PatientDashboard from './pages/PatientDashboard';
 import PharmaDashboard from './pages/PharmaDashboard';
 import RegulatorDashboard from './pages/RegulatorDashboard';
 import PharmaSubmissionDashboard from './pages/PharmaSubmissionDashboard';
+import DoctorDashboard from './pages/DoctorDashboard';
 import TrialStatusBar from './components/TrialStatusBar';
 
 export default function App() {
@@ -50,8 +51,16 @@ export default function App() {
                 to="/regulator" 
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               >
-                <FileSearch size={20} />
-                FDA Audit
+                <Eye size={20} />
+                Regulator Oversight
+              </NavLink>
+
+              <NavLink 
+                to="/doctor" 
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              >
+                <Shield size={20} />
+                Doctor Verification
               </NavLink>
               
               <div className="mt-8 mb-4">
@@ -87,9 +96,10 @@ export default function App() {
           <TrialStatusBar />
           <Routes>
             <Route path="/" element={<PatientDashboard />} />
-            <Route path="/researcher" element={<PharmaDashboard />} />
-            <Route path="/pharma" element={<PharmaSubmissionDashboard />} />
+            <Route path="/pharma" element={<PharmaDashboard />} />
+            <Route path="/pharma-submission" element={<PharmaSubmissionDashboard />} />
             <Route path="/regulator" element={<RegulatorDashboard />} />
+            <Route path="/doctor" element={<DoctorDashboard />} />
           </Routes>
         </main>
       </div>

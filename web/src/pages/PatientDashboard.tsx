@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, ClipboardCheck, KeyRound, Shield, UserCheck, Wallet } from 'lucide-react';
+import { CheckCircle, ClipboardCheck, KeyRound, Shield, UserCheck, Wallet, ShieldAlert } from 'lucide-react';
 import { fhenixAdapter, type EncryptedPatientPayload } from '../fhenix';
 
 export default function PatientDashboard() {
@@ -50,7 +50,35 @@ export default function PatientDashboard() {
             </div>
           </div>
 
-          <div className="grid-2 compact">
+          {encryptedPayload && !isEncrypting && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-4 p-4 bg-success bg-opacity-10 border border-success border-opacity-30 rounded-lg"
+            >
+              <div className="flex items-center gap-2 text-success font-bold mb-2">
+                <CheckCircle size={18} />
+                Vault Sealed Successfully
+              </div>
+              <div className="text-xs text-text-secondary space-y-1 font-mono">
+                <p>IPFS CID: <span className="text-text-primary truncate block">{encryptedPayload.ciphertextHash.slice(0, 20)}...</span></p>
+                <p>Vault ID: <span className="text-text-primary">{encryptedPayload.ciphertextHash.slice(0, 10)}</span></p>
+                <p>Time: <span className="text-text-primary">{new Date().toLocaleTimeString()}</span></p>
+              </div>
+
+              <div className="mt-4 p-3 border border-warning border-opacity-50 rounded bg-warning bg-opacity-10 flex items-start gap-3">
+                <ShieldAlert className="text-warning mt-1 flex-shrink-0" size={18} />
+                <div>
+                  <div className="text-xs font-bold text-warning">Unverified Medical Record</div>
+                  <div className="text-[10px] text-text-secondary mt-1">
+                    Your data is encrypted, but to receive higher match scores from Pharma, you must have your primary care physician cryptographically sign this Vault ID.
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          <div className="grid-2 compact mt-6">
             <div className="form-group">
               <label className="form-label">Age</label>
               <input className="form-input" defaultValue="45" />

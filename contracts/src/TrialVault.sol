@@ -16,13 +16,18 @@ contract TrialVault is Permissioned {
         uint128 minPriceWei;
         uint8 allowedCategories;
         bool exists;
+        bool isVerified;
+        address verifiedBy;
     }
 
     uint256 public nextTokenId = 1;
     mapping(uint256 => PatientData) internal patientRecords;
     mapping(address => uint256) public patientToTokenId;
+    mapping(address => bool) public authorizedDoctors;
 
     event DataRegistered(address indexed patient, uint256 tokenId, string ipfsCid);
+    event DoctorRegistered(address indexed doctor);
+    event DataVerified(uint256 indexed tokenId, address indexed doctor);
     
     function registerData(
         string calldata ipfsCid,
@@ -42,11 +47,28 @@ contract TrialVault is Permissioned {
         data.encryptedLabValue1 = FHE.asEuint32(inEncLabValue1);
         data.encryptedLabValue2 = FHE.asEuint32(inEncLabValue2);
         data.exists = true;
+        data.isVerified = false;
+        data.verifiedBy = address(0);
 
         patientToTokenId[msg.sender] = tokenId;
 
         emit DataRegistered(msg.sender, tokenId, ipfsCid);
         return tokenId;
+    }
+
+    function registerAsDoctor() external {
+        authorizedDoctors[msg.sender] = true;
+        emit DoctorRegistered(msg.sender);
+    }
+
+    function verifyPatientData(uint256 tokenId) external {
+        require(authorizedDoctors[msg.sender], "Not an authorized doctor");
+        require(patientRecords[tokenId].exists, "Record does not exist");
+        
+        patientRecords[tokenId].isVerified = true;
+        patientRecords[tokenId].verifiedBy = msg.sender;
+        
+        emit DataVerified(tokenId, msg.sender);
     }
 
     // --- MODULE 2: FHE Trial Analytics Engine ---
@@ -57,6 +79,7 @@ contract TrialVault is Permissioned {
         euint32 encMaxAge;
         euint32 encLabMin;
         euint32 encLabMax;
+        euint32 encRequiredScore;
         address sponsor;
     }
 
@@ -72,7 +95,8 @@ contract TrialVault is Permissioned {
         inEuint32 calldata inEncMinAge,
         inEuint32 calldata inEncMaxAge,
         inEuint32 calldata inEncLabMin,
-        inEuint32 calldata inEncLabMax
+        inEuint32 calldata inEncLabMax,
+        inEuint32 calldata inEncRequiredScore
     ) external returns (uint256) {
         uint256 trialId = nextTrialId++;
         TrialCriteria storage criteria = trials[trialId];
@@ -82,6 +106,7 @@ contract TrialVault is Permissioned {
         criteria.encMaxAge = FHE.asEuint32(inEncMaxAge);
         criteria.encLabMin = FHE.asEuint32(inEncLabMin);
         criteria.encLabMax = FHE.asEuint32(inEncLabMax);
+        criteria.encRequiredScore = FHE.asEuint32(inEncRequiredScore);
         criteria.sponsor = msg.sender;
 
         trialPoolCounts[trialId] = FHE.asEuint32(0);
@@ -105,10 +130,21 @@ contract TrialVault is Permissioned {
                 ebool diagOK = FHE.eq(p.encryptedDiagnosisCode, criteria.encDiagnosisRequired);
                 ebool labOK = FHE.and(FHE.gte(p.encryptedLabValue1, criteria.encLabMin), FHE.lte(p.encryptedLabValue1, criteria.encLabMax));
                 
-                ebool fullMatch = FHE.and(FHE.and(ageOK, diagOK), labOK);
+                // Calculate arithmetic match score homomorphically
+                euint32 score = FHE.asEuint32(0);
+                score = FHE.add(score, FHE.select(ageOK, FHE.asEuint32(5), FHE.asEuint32(0)));
+                score = FHE.add(score, FHE.select(diagOK, FHE.asEuint32(10), FHE.asEuint32(0)));
+                score = FHE.add(score, FHE.select(labOK, FHE.asEuint32(5), FHE.asEuint32(0)));
                 
-                // Add 1 if match, 0 if no match
-                encCount = FHE.add(encCount, FHE.select(fullMatch, FHE.asEuint32(1), FHE.asEuint32(0)));
+                // Add bonus points if data is verified by a doctor
+                euint32 verifiedBonus = p.isVerified ? FHE.asEuint32(5) : FHE.asEuint32(0);
+                score = FHE.add(score, verifiedBonus);
+
+                // Check if score meets criteria
+                ebool isEligible = FHE.gte(score, criteria.encRequiredScore);
+                
+                // Add 1 if eligible, 0 if not
+                encCount = FHE.add(encCount, FHE.select(isEligible, FHE.asEuint32(1), FHE.asEuint32(0)));
             }
         }
         
