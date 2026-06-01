@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5175";
+export const API_URL = import.meta.env.VITE_API_URL || "https://trialvault-aa9g.onrender.com";
 
 export type CohortRequestPayload = {
   criteriaHash: string;
